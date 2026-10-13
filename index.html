@@ -16,7 +16,6 @@
   .text-electoral-blue { color:var(--azul); }
   .border-electoral-blue { border-color:var(--azul); }
 
-  /* Layout tipo explorador: barra superior + panel lateral + mapa a pantalla completa */
   #app { display:flex; height:calc(100vh - 56px); min-height:520px; position:relative; }
   #sidebar { width:340px; flex:none; background:#fff; border-right:1px solid var(--borde);
              overflow-y:auto; transition:margin-left .25s ease; z-index:500; }
@@ -24,7 +23,6 @@
   #mapa-wrap { flex:1; position:relative; min-width:0; }
   #map { position:absolute; inset:0; }
 
-  /* Secciones plegables del panel */
   details.sec { border-bottom:1px solid var(--borde); }
   details.sec > summary { cursor:pointer; list-style:none; padding:12px 16px; display:flex;
       justify-content:space-between; align-items:center; font-size:11px; font-weight:700;
@@ -34,7 +32,6 @@
   details.sec:not([open]) > summary::after { transform:rotate(-90deg); }
   details.sec .cuerpo { padding:0 16px 16px; }
 
-  /* Controles flotantes sobre el mapa */
   .flotante { position:absolute; z-index:600; background:rgba(255,255,255,.95); border:1px solid var(--borde);
               border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.15); backdrop-filter:blur(4px); }
   #btn-panel { top:12px; left:12px; padding:8px 12px; font-size:12px; font-weight:700; color:var(--azul); cursor:pointer; }
@@ -42,7 +39,6 @@
   #leyenda { bottom:12px; right:12px; padding:8px 12px; font-size:11px; color:#334155; }
   .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
 
-  /* Franja de estadísticas inferior */
   #stats { position:absolute; left:0; right:0; bottom:0; z-index:550; display:none; }
   .stat { background:#f8fafc; border:1px solid var(--borde); border-radius:8px; padding:8px 10px; text-align:center; }
   .stat b { display:block; font-size:18px; color:var(--azul); line-height:1.1; }
@@ -51,6 +47,19 @@
   .pin-num { width:26px; height:26px; border-radius:50%; background:#e11d48; color:#fff; border:2px solid #fff;
              box-shadow:0 1px 4px rgba(0,0,0,.45); font-weight:700; font-size:12px; display:flex;
              align-items:center; justify-content:center; }
+             
+  .label-seccion {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #1e3a8a;
+    border-radius: 4px;
+    color: #1e3a8a;
+    font-weight: bold;
+    font-size: 11px;
+    padding: 2px 5px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
   @media (max-width:768px){
     #sidebar { position:absolute; top:0; bottom:0; left:0; width:86%; max-width:340px; box-shadow:4px 0 16px rgba(0,0,0,.2); }
     #sidebar.colapsado { margin-left:-100%; }
@@ -73,7 +82,7 @@
     </div>
   </div>
   <div class="hidden md:flex items-center gap-2 text-[11px]">
-    <span class="bg-white/10 border border-white/20 rounded-full px-3 py-1" id="chip-distrito">Distrito Local 11</span>
+    <span class="bg-white/10 border border-white/20 rounded-full px-3 py-1" id="chip-distrito">Distrito Local 15</span>
     <span class="bg-white/10 border border-white/20 rounded-full px-3 py-1" id="chip-ruta">--</span>
   </div>
 </header>
@@ -88,8 +97,8 @@
       <div class="cuerpo">
         <label class="block text-[11px] font-bold text-slate-600 mb-1">Distrito Local</label>
         <select id="select-distrito" class="w-full p-2 border rounded-lg bg-slate-50 text-sm font-semibold text-slate-800 mb-3 focus:ring-2 focus:ring-blue-800 focus:outline-none">
-          <option value="Distrito Local 11">Distrito Local 11</option>
-          <option value="Distrito Local 15">Distrito Local 15</option>
+          <option value="Distrito Local 15">Distrito Local 15 (Rutas 1-47)</option>
+          <option value="Distrito Local 11">Distrito Local 11 (Rutas 48-63)</option>
         </select>
         <label class="block text-[11px] font-bold text-slate-600 mb-1">Ruta Electoral</label>
         <select id="select-ruta" class="w-full p-2 border rounded-lg bg-slate-50 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-blue-800 focus:outline-none"></select>
@@ -148,7 +157,6 @@
       <div><span class="dot" style="background:#e11d48"></span>Casillas</div>
     </div>
 
-    <!-- Franja de estadísticas -->
     <div id="stats" class="p-2">
       <div class="grid grid-cols-3 gap-2 max-w-md">
         <div class="stat"><b id="st-rutas">0</b><span>Rutas</span></div>
@@ -187,8 +195,8 @@
         <img id="pdf-map-img" class="w-full h-auto block" src="" alt="Mapa de Ruta con calles">
       </div>
       <p class="text-[10px] text-slate-500 mt-1">
-        Círculo rojo numerado = casilla (el número corresponde a la tabla) · Línea azul gruesa = límite de la ruta ·
-        Línea punteada = secciones electorales · Mapa © OpenStreetMap contributors
+        Círculo rojo numerado = casilla · Línea azul gruesa = límite de la ruta ·
+        Línea punteada = secciones electorales con número visible · Mapa © OpenStreetMap contributors
       </p>
     </div>
 
@@ -198,8 +206,8 @@
           <tr class="bg-electoral-blue text-white">
             <th class="p-2 border text-center">#</th>
             <th class="p-2 border">Sec.</th>
-            <th class="p-2 border">Casilla(s)</th>
-            <th class="p-2 border">Ubicación / Dirección del Inmueble</th>
+            <th class="p-2 border">Casilla</th>
+            <th class="p-2 border">Dirección del Inmueble</th>
             <th class="p-2 border">Coordenadas</th>
             <th class="p-2 border text-center">Google Maps</th>
           </tr>
@@ -211,7 +219,6 @@
 </section>
 
 <script>
-  /* ---------- Mapa ---------- */
   let map = L.map('map', { preferCanvas: true, zoomControl: false }).setView([19.4018, -99.1329], 13);
   L.control.zoom({ position: 'topright' }).addTo(map);
   L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
@@ -230,20 +237,17 @@
   const selectDistrito = document.getElementById('select-distrito');
   const selectRuta = document.getElementById('select-ruta');
 
-  /* Panel lateral */
   function togglePanel() {
     document.getElementById('sidebar').classList.toggle('colapsado');
     setTimeout(() => map.invalidateSize(), 300);
   }
   if (window.innerWidth <= 768) document.getElementById('sidebar').classList.add('colapsado');
 
-  /* Coordenadas del cursor */
   map.on('mousemove', e => {
     document.getElementById('coords').textContent =
       `LAT ${e.latlng.lat.toFixed(5)} · LON ${e.latlng.lng.toFixed(5)}`;
   });
 
-  /* Interruptores de capas */
   [['chk-contorno', capaRutaContorno], ['chk-secciones', capaSecciones], ['chk-casillas', capaMarcadores]]
     .forEach(([id, capa]) => {
       document.getElementById(id).addEventListener('change', e => {
@@ -269,7 +273,6 @@
     .then(r => r.json())
     .then(data => { 
       casillasGlobalGeo = data;
-      // Si el distrito ya cargó previamente, volvemos a renderizar para capturar las casillas
       if (selectRuta.value) {
         renderizarRuta(selectRuta.value, selectDistrito.value);
       }
@@ -280,17 +283,25 @@
     document.getElementById('chip-distrito').textContent = distrito;
     const rutaContornosFile = `capas/${distrito}.-Rutas.geojson`;
     const rutaSeccionesFile = `capas/${distrito}.-Secciones electorales.geojson`;
+    const rutaRgFile        = `capas/${distrito}.-RG.geojson`;
 
     Promise.all([
       fetch(encodeURI(rutaContornosFile)).then(r => r.json()).catch(() => null),
-      fetch(encodeURI(rutaSeccionesFile)).then(r => r.json()).catch(() => null)
-    ]).then(([rutasGeo, seccionesGeo]) => {
-      cacheGeojson = { rutasGeo, seccionesGeo, casillasGeo: casillasGlobalGeo };
+      fetch(encodeURI(rutaSeccionesFile)).then(r => r.json()).catch(() => null),
+      fetch(encodeURI(rutaRgFile)).then(r => r.json()).catch(() => null)
+    ]).then(([rutasGeo, seccionesGeo, rgGeo]) => {
+      cacheGeojson = { rutasGeo, seccionesGeo, rgGeo, casillasGeo: casillasGlobalGeo };
       selectRuta.innerHTML = '';
       let rutasUnicas = new Set();
 
       if (rutasGeo && rutasGeo.features) {
         rutasGeo.features.forEach(f => {
+          const r = getProp(f.properties, KEYS_RUTA);
+          if (r) rutasUnicas.add(String(r).trim());
+        });
+      }
+      if (rgGeo && rgGeo.features) {
+        rgGeo.features.forEach(f => {
           const r = getProp(f.properties, KEYS_RUTA);
           if (r) rutasUnicas.add(String(r).trim());
         });
@@ -327,12 +338,24 @@
     const tbody = document.getElementById('tabla-casillas-body');
     tbody.innerHTML = '';
 
-    const { rutasGeo, seccionesGeo } = cacheGeojson;
-    const casillasGeo = casillasGlobalGeo; // Usar la capa global unificada directamente
+    const { rutasGeo, seccionesGeo, rgGeo } = cacheGeojson;
+    const casillasGeo = casillasGlobalGeo;
     let bounds = [];
     let nSecciones = 0, nCasillas = 0;
     datosRuta = { nombreRuta, distrito, featRuta: null, featSec: [], casillas: [] };
 
+    let propsRG = null;
+
+    // 1. Buscar propiedades del RG en la capa de RG específica del distrito (-RG.geojson)
+    if (rgGeo && rgGeo.features) {
+      const featRg = rgGeo.features.find(f => {
+        const r = getProp(f.properties, KEYS_RUTA);
+        return r && String(r).trim().toLowerCase() === nombreRuta.toLowerCase();
+      });
+      if (featRg) propsRG = featRg.properties;
+    }
+
+    // 2. Dibujar contorno de ruta y rescatar propiedades si faltaban
     if (rutasGeo && rutasGeo.features) {
       const featRuta = rutasGeo.features.find(f => {
         const r = getProp(f.properties, KEYS_RUTA);
@@ -341,33 +364,41 @@
 
       if (featRuta) {
         datosRuta.featRuta = featRuta;
-        const props = featRuta.properties;
-        const nom = getProp(props, ['Propuesta_RG_IZTACALCO_Nombre(s)', 'nombre(s)', 'nombre', 'rg', 'representante']) || '';
-        const ap1 = getProp(props, ['Propuesta_RG_IZTACALCO_apellido 1', 'Propuesta_RG_IZTACALCO_apellido1', 'apellido 1', 'apellido1']) || '';
-        const ap2 = getProp(props, ['Propuesta_RG_IZTACALCO_apellido 2', 'Propuesta_RG_IZTACALCO_apellido2', 'apellido 2', 'apellido2']) || '';
-        let rgNombre = `${nom} ${ap1} ${ap2}`.trim();
-        if (!rgNombre) rgNombre = "Por Asignar";
-
-        const rgTel = getProp(props, ['Propuesta_RG_IZTACALCO_Celular', 'celular', 'telefono', 'tel', 'tel_rg']) || "--";
-        const seccionesLista = getProp(props, ['secciones', 'seccion', 'sec', 'SECCION']) || "--";
-
-        document.getElementById('info-ruta-nombre').textContent = `${nombreRuta} (${distrito})`;
-        document.getElementById('info-rg-nombre').textContent = rgNombre;
-        document.getElementById('info-rg-tel').textContent = rgTel;
-        document.getElementById('info-rg-tel-link').href = `tel:${String(rgTel).replace(/\s+/g, '')}`;
-        document.getElementById('info-secciones').textContent = seccionesLista;
-
-        document.getElementById('pdf-ruta-titulo').textContent = `REPORTE OPERATIVO - ${nombreRuta}`;
-        document.getElementById('pdf-distrito-sub').textContent = distrito;
-        document.getElementById('pdf-rg-nombre').textContent = rgNombre;
-        document.getElementById('pdf-rg-tel').textContent = rgTel;
-        document.getElementById('pdf-secciones-lista').textContent = seccionesLista;
-
+        if (!propsRG) propsRG = featRuta.properties;
         capaRutaContorno.addLayer(L.geoJSON(featRuta, {
           style: { color: '#003366', weight: 3, fillOpacity: 0.15 }
         }));
       }
     }
+
+    // Extraer datos del RG con los nombres de columna exactos proporcionados
+    let rgNombre = "Por Asignar";
+    let rgTel = "--";
+    let seccionesLista = "--";
+
+    if (propsRG) {
+      const nom = getProp(propsRG, ['Propuesta_RG_IZTACALCO_Nombre(s)', 'nombre(s)', 'nombre', 'rg', 'representante']) || '';
+      const ap1 = getProp(propsRG, ['Propuesta_RG_IZTACALCO_apellido 1', 'Propuesta_RG_IZTACALCO_apellido1', 'apellido 1', 'apellido1']) || '';
+      const ap2 = getProp(propsRG, ['Propuesta_RG_IZTACALCO_apellido 2', 'Propuesta_RG_IZTACALCO_apellido2', 'apellido 2', 'apellido2']) || '';
+      
+      let compuesto = `${nom} ${ap1} ${ap2}`.trim();
+      if (compuesto) rgNombre = compuesto;
+
+      rgTel = getProp(propsRG, ['Propuesta_RG_IZTACALCO_Celular', 'celular', 'telefono', 'tel', 'tel_rg']) || "--";
+      seccionesLista = getProp(propsRG, ['secciones', 'seccion', 'sec', 'SECCION']) || "--";
+    }
+
+    document.getElementById('info-ruta-nombre').textContent = `${nombreRuta} (${distrito})`;
+    document.getElementById('info-rg-nombre').textContent = rgNombre;
+    document.getElementById('info-rg-tel').textContent = rgTel;
+    document.getElementById('info-rg-tel-link').href = `tel:${String(rgTel).replace(/\s+/g, '')}`;
+    document.getElementById('info-secciones').textContent = seccionesLista;
+
+    document.getElementById('pdf-ruta-titulo').textContent = `REPORTE OPERATIVO - ${nombreRuta}`;
+    document.getElementById('pdf-distrito-sub').textContent = distrito;
+    document.getElementById('pdf-rg-nombre').textContent = rgNombre;
+    document.getElementById('pdf-rg-tel').textContent = rgTel;
+    document.getElementById('pdf-secciones-lista').textContent = seccionesLista;
 
     let featSec = [];
     if (seccionesGeo && seccionesGeo.features) {
@@ -376,9 +407,20 @@
         return r && String(r).trim().toLowerCase() === nombreRuta.toLowerCase();
       });
       if (featSec.length > 0) {
-        capaSecciones.addLayer(L.geoJSON(featSec, {
-          style: { color: '#4169E1', weight: 1.5, dashArray: '4, 4', fillOpacity: 0.05 }
-        }));
+        featSec.forEach(f => {
+          const secLayer = L.geoJSON(f, {
+            style: { color: '#4169E1', weight: 1.5, dashArray: '4, 4', fillOpacity: 0.05 }
+          });
+          const secNum = getProp(f.properties, KEYS_SECCION);
+          if (secNum) {
+            secLayer.bindTooltip(`Sec. ${secNum}`, {
+              permanent: true,
+              direction: 'center',
+              className: 'label-seccion'
+            });
+          }
+          capaSecciones.addLayer(secLayer);
+        });
       }
     }
     datosRuta.featSec = featSec;
@@ -436,9 +478,8 @@
 
   selectDistrito.addEventListener('change', e => cargarArchivosDistrito(e.target.value));
   selectRuta.addEventListener('change', e => renderizarRuta(e.target.value, selectDistrito.value));
-  cargarArchivosDistrito('Distrito Local 11');
+  cargarArchivosDistrito('Distrito Local 15');
 
-  /* ---------- Mapa con calles para el PDF ---------- */
   const TILE = 256;
   function proyectar(lat, lng, z) {
     const s = TILE * Math.pow(2, z);
