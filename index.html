@@ -19,7 +19,7 @@
 </head>
 <body class="bg-slate-100 min-h-screen flex flex-col font-sans">
 
-    <!-- ENCABEZADO INSTITUCIONAL EN PANTALLA (SOLO LOGO DEL PARTIDO) -->
+    <!-- ENCABEZADO INSTITUCIONAL (SOLO LOGO DEL PARTIDO) -->
     <header class="bg-electoral-blue text-white py-4 px-6 shadow-md flex justify-between items-center border-b-4 border-blue-400">
         <div class="flex items-center space-x-4">
             <div class="bg-white p-1.5 rounded-lg shadow h-14 w-14 flex items-center justify-center overflow-hidden">
@@ -39,26 +39,23 @@
     <!-- PANEL PRINCIPAL -->
     <main class="container mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow">
         
-        <!-- PANEL DE SELECCIÓN DE DISTRITO Y RUTA -->
+        <!-- PANEL DE SELECCIÓN -->
         <section class="bg-white rounded-xl shadow p-5 border-t-4 border-electoral-blue flex flex-col justify-between">
             <div>
                 <h2 class="text-md font-bold text-electoral-blue mb-2">Filtro de Ubicación</h2>
                 <p class="text-xs text-slate-500 mb-4">Selecciona el Distrito Local y la Ruta Electoral para consultar el mapa y el Representante General.</p>
                 
-                <!-- SELECTOR DE DISTRITO LOCAL -->
                 <label class="block text-xs font-bold text-slate-700 mb-1">Distrito Local:</label>
                 <select id="select-distrito" class="w-full p-2.5 border rounded-lg bg-slate-50 text-sm font-semibold text-slate-800 mb-3 focus:ring-2 focus:ring-blue-800 focus:outline-none">
                     <option value="Distrito Local 11">Distrito Local 11</option>
                     <option value="Distrito Local 15">Distrito Local 15</option>
                 </select>
 
-                <!-- SELECTOR DE RUTA ELECTORAL -->
                 <label class="block text-xs font-bold text-slate-700 mb-1">Ruta Electoral:</label>
                 <select id="select-ruta" class="w-full p-2.5 border rounded-lg bg-slate-50 text-sm font-semibold text-slate-800 mb-4 focus:ring-2 focus:ring-blue-800 focus:outline-none">
-                    <!-- Se llena dinámicamente -->
+                    <!-- Cargado dinámicamente -->
                 </select>
 
-                <!-- FICHA DEL REPRESENTANTE GENERAL -->
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-xs space-y-2">
                     <p class="font-bold text-electoral-blue text-sm" id="info-ruta-nombre">Cargando...</p>
                     <hr class="border-blue-200">
@@ -74,7 +71,6 @@
                 </div>
             </div>
 
-            <!-- BOTÓN GENERAR PDF -->
             <button onclick="generarPDF()" class="w-full mt-4 bg-electoral-blue hover:bg-blue-900 text-white font-bold py-3 px-4 rounded-lg shadow text-sm transition flex items-center justify-center space-x-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 <span>Generar PDF de Ruta</span>
@@ -93,7 +89,6 @@
     <section class="container mx-auto p-4 md:p-6 pt-0">
         <div id="pdf-area" class="bg-white rounded-xl shadow p-6 border-t-4 border-electoral-blue">
             
-            <!-- ENCABEZADO PDF (SOLO LOGO DEL PARTIDO) -->
             <div class="flex justify-between items-center border-b-2 border-blue-900 pb-3 mb-4">
                 <div class="flex items-center space-x-3">
                     <img src="img/logo_partido.png" alt="Logo Partido" class="h-12 object-contain" onerror="this.src='https://via.placeholder.com/50?text=PARTIDO'">
@@ -110,6 +105,11 @@
                 </div>
             </div>
 
+            <!-- CONTENEDOR DEL MAPA CAPTURADO PARA EL PDF -->
+            <div id="pdf-map-container" class="w-full h-48 mb-4 rounded border overflow-hidden hidden">
+                <img id="pdf-map-img" class="w-full h-full object-cover" src="" alt="Mapa de Ruta">
+            </div>
+
             <!-- TABLA DE CASILLAS -->
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs">
@@ -122,7 +122,7 @@
                         </tr>
                     </thead>
                     <tbody id="tabla-casillas-body" class="divide-y divide-slate-200">
-                        <!-- Creado dinámicamente -->
+                        <!-- Filas cargadas dinámicamente -->
                     </tbody>
                 </table>
             </div>
@@ -131,9 +131,10 @@
 
     <!-- SCRIPT DE LECTURA DE ARCHIVOS GEOJSON Y CONTROL DE MAPA -->
     <script>
-        let map = L.map('map').setView([19.4018, -99.1329], 13);
+        let map = L.map('map', { preferCanvas: true }).setView([19.4018, -99.1329], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
+            attribution: '© OpenStreetMap contributors',
+            crossOrigin: true
         }).addTo(map);
 
         let capaRutaContorno = L.layerGroup().addTo(map);
@@ -144,6 +145,19 @@
 
         const selectDistrito = document.getElementById('select-distrito');
         const selectRuta = document.getElementById('select-ruta');
+
+        // Función auxiliar para obtener el valor de una propiedad sin importar mayúsculas/minúsculas
+        function getProp(props, keys) {
+            if (!props) return null;
+            for (let k of keys) {
+                for (let p in props) {
+                    if (p.toLowerCase() === k.toLowerCase() && props[p] !== undefined && props[p] !== null) {
+                        return props[p];
+                    }
+                }
+            }
+            return null;
+        }
 
         function cargarArchivosDistrito(distrito) {
             const rutaContornosFile = `capas/${distrito}.-Rutas.geojson`;
@@ -159,19 +173,32 @@
                 cacheGeojson = { rutasGeo, seccionesGeo, casillasGeo };
                 selectRuta.innerHTML = '';
 
-                if (!rutasGeo || !rutasGeo.features) {
-                    console.error("Error cargando archivos del " + distrito);
-                    return;
+                let rutasUnicas = new Set();
+
+                // 1. Extraer rutas de la capa de contornos
+                if (rutasGeo && rutasGeo.features) {
+                    rutasGeo.features.forEach(f => {
+                        const r = getProp(f.properties, ['ruta', 'nombre', 'id_ruta', 'layer']);
+                        if (r) rutasUnicas.add(String(r).trim());
+                    });
                 }
 
-                rutasGeo.features.forEach(f => {
-                    const nomRuta = f.properties.Ruta || f.properties.ruta || f.properties.NOMBRE || f.properties.nombre;
-                    if (nomRuta) {
-                        let opt = document.createElement('option');
-                        opt.value = nomRuta;
-                        opt.textContent = nomRuta;
-                        selectRuta.appendChild(opt);
-                    }
+                // 2. Extraer rutas de la capa de casillas por si acaso
+                if (casillasGeo && casillasGeo.features) {
+                    casillasGeo.features.forEach(f => {
+                        const r = getProp(f.properties, ['ruta', 'nombre', 'id_ruta']);
+                        if (r) rutasUnicas.add(String(r).trim());
+                    });
+                }
+
+                // Ordenar alfabéticamente/numéricamente las rutas
+                const listaOrdenada = Array.from(rutasUnicas).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
+                listaOrdenada.forEach(nomRuta => {
+                    let opt = document.createElement('option');
+                    opt.value = nomRuta;
+                    opt.textContent = nomRuta;
+                    selectRuta.appendChild(opt);
                 });
 
                 if (selectRuta.options.length > 0) {
@@ -191,16 +218,18 @@
             const { rutasGeo, seccionesGeo, casillasGeo } = cacheGeojson;
             let bounds = [];
 
+            // 1. Extraer datos del Representante y dibujar contorno
             if (rutasGeo && rutasGeo.features) {
-                const featRuta = rutasGeo.features.find(f => 
-                    (f.properties.Ruta || f.properties.ruta || f.properties.NOMBRE || f.properties.nombre) === nombreRuta
-                );
+                const featRuta = rutasGeo.features.find(f => {
+                    const r = getProp(f.properties, ['ruta', 'nombre', 'id_ruta', 'layer']);
+                    return r && String(r).trim().toLowerCase() === nombreRuta.toLowerCase();
+                });
 
                 if (featRuta) {
                     const props = featRuta.properties;
-                    const rgNombre = props.representante || props.rg || props.RG || props.REPRESENTANTE || "Por Asignar";
-                    const rgTel = props.telefono || props.tel || props.tel_rg || props.TEL || "--";
-                    const seccionesLista = props.secciones || props.SECCIONES || "--";
+                    const rgNombre = getProp(props, ['representante', 'rg', 'nombre_rg', 'rep']) || "Por Asignar";
+                    const rgTel = getProp(props, ['telefono', 'tel', 'tel_rg', 'celular']) || "--";
+                    const seccionesLista = getProp(props, ['secciones', 'seccion', 'sec']) || "--";
 
                     document.getElementById('info-ruta-nombre').textContent = `${nombreRuta} (${distrito})`;
                     document.getElementById('info-rg-nombre').textContent = rgNombre;
@@ -215,16 +244,18 @@
                     document.getElementById('pdf-secciones-lista').textContent = seccionesLista;
 
                     const layer = L.geoJSON(featRuta, {
-                        style: { color: '#003366', weight: 3, fillOpacity: 0.1 }
+                        style: { color: '#003366', weight: 3, fillOpacity: 0.15 }
                     });
                     capaRutaContorno.addLayer(layer);
                 }
             }
 
+            // 2. Dibujar secciones electorales
             if (seccionesGeo && seccionesGeo.features) {
-                const featSec = seccionesGeo.features.filter(f => 
-                    (f.properties.Ruta || f.properties.ruta) === nombreRuta
-                );
+                const featSec = seccionesGeo.features.filter(f => {
+                    const r = getProp(f.properties, ['ruta', 'nombre', 'id_ruta']);
+                    return r && String(r).trim().toLowerCase() === nombreRuta.toLowerCase();
+                });
                 if (featSec.length > 0) {
                     const layer = L.geoJSON(featSec, {
                         style: { color: '#4169E1', weight: 1.5, dashArray: '4, 4', fillOpacity: 0.05 }
@@ -233,19 +264,24 @@
                 }
             }
 
+            // 3. Dibujar puntos de casillas
             if (casillasGeo && casillasGeo.features) {
                 casillasGeo.features.forEach(f => {
-                    const rCasilla = f.properties.Ruta || f.properties.ruta;
-                    if (rCasilla === nombreRuta) {
+                    const rCasilla = getProp(f.properties, ['ruta', 'nombre', 'id_ruta']);
+                    if (rCasilla && String(rCasilla).trim().toLowerCase() === nombreRuta.toLowerCase()) {
                         const lat = f.geometry.coordinates[1];
                         const lng = f.geometry.coordinates[0];
                         const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 
+                        const seccion = getProp(f.properties, ['seccion', 'sec']) || '';
+                        const tipoCasilla = getProp(f.properties, ['casillas', 'casilla', 'tipo']) || '';
+                        const direccion = getProp(f.properties, ['direccion', 'ubicacion', 'domicilio']) || '';
+
                         let tr = document.createElement('tr');
                         tr.innerHTML = `
-                            <td class="p-2 border font-bold">${f.properties.seccion || f.properties.SECCION || ''}</td>
-                            <td class="p-2 border font-semibold text-blue-900">${f.properties.casillas || f.properties.tipo || f.properties.CASILLAS || ''}</td>
-                            <td class="p-2 border text-xs">${f.properties.direccion || f.properties.DIRECCION || ''}</td>
+                            <td class="p-2 border font-bold">${seccion}</td>
+                            <td class="p-2 border font-semibold text-blue-900">${tipoCasilla}</td>
+                            <td class="p-2 border text-xs">${direccion}</td>
                             <td class="p-2 border text-center">
                                 <a href="${gmapsUrl}" target="_blank" class="bg-blue-600 text-white font-bold px-2 py-1 rounded text-[10px] hover:bg-blue-800">🧭 Cómo llegar</a>
                             </td>
@@ -253,9 +289,9 @@
                         tbody.appendChild(tr);
 
                         let marker = L.marker([lat, lng]).bindPopup(`
-                            <b>Sección ${f.properties.seccion || ''}</b><br>
-                            <b>Casillas:</b> ${f.properties.casillas || f.properties.tipo || ''}<br>
-                            ${f.properties.direccion || ''}<br>
+                            <b>Sección ${seccion}</b><br>
+                            <b>Casillas:</b> ${tipoCasilla}<br>
+                            ${direccion}<br>
                             <a href="${gmapsUrl}" target="_blank" style="color:white; background:#003366; padding:3px 6px; border-radius:3px; text-decoration:none; font-size:11px; display:inline-block; margin-top:4px;">Ver en Google Maps</a>
                         `);
                         capaMarcadores.addLayer(marker);
@@ -274,16 +310,34 @@
 
         cargarArchivosDistrito('Distrito Local 11');
 
+        // FUNCIÓN MEJORADA PARA INCLUIR EL MAPA EN EL PDF
         function generarPDF() {
-            const element = document.getElementById('pdf-area');
-            html2pdf().set({
-                margin: 8,
-                filename: `Reporte_${selectDistrito.value}_${selectRuta.value.replace(/\s+/g, '_')}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(element).save();
+            const pdfMapContainer = document.getElementById('pdf-map-container');
+            const pdfMapImg = document.getElementById('pdf-map-img');
+
+            // Capturar la vista actual del mapa mediante Leaflet/Canvas
+            leafletImage(map, function(err, canvas) {
+                if (!err && canvas) {
+                    pdfMapImg.src = canvas.toDataURL();
+                    pdfMapContainer.classList.remove('hidden');
+                }
+
+                // Generar el PDF
+                const element = document.getElementById('pdf-area');
+                html2pdf().set({
+                    margin: 8,
+                    filename: `Reporte_${selectDistrito.value}_${selectRuta.value.replace(/\s+/g, '_')}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).from(element).save().then(() => {
+                    pdfMapContainer.classList.add('hidden');
+                });
+            });
         }
     </script>
+
+    <!-- Librería auxiliar para renderizado directo del mapa a imagen en el PDF -->
+    <script src="https://unpkg.com/leaflet-image@0.2.1/leaflet-image.js"></script>
 </body>
 </html>
