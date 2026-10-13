@@ -127,7 +127,7 @@
     <details class="sec" open>
       <summary>Descargas</summary>
       <div class="cuerpo">
-        <button id="btn-pdf" onclick="generarPDF()" class="w-full bg-electoral-blue hover:bg-blue-900 disabled:opacity-60 hover:bg-blue-900 text-white font-bold py-2.5 px-4 rounded-lg shadow text-sm transition flex items-center justify-center gap-2">
+        <button id="btn-pdf" onclick="generarPDF()" class="w-full bg-electoral-blue hover:bg-blue-900 disabled:opacity-60 text-white font-bold py-2.5 px-4 rounded-lg shadow text-sm transition flex items-center justify-center gap-2">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
           <span id="btn-pdf-txt">Generar PDF de Ruta</span>
         </button>
@@ -264,9 +264,16 @@
   const KEYS_RUTA = ['GEOMETRY1_', 'GEOMETRY1', 'ruta', 'nombre', 'id_ruta', 'layer', 'rutas'];
   const KEYS_SECCION = ['SECCION', 'seccion', 'sec', 'sección'];
 
+  // Cargar capa global unificada de casillas
   fetch(encodeURI('capas/Casillas_ubicacion.geojson'))
     .then(r => r.json())
-    .then(data => { casillasGlobalGeo = data; })
+    .then(data => { 
+      casillasGlobalGeo = data;
+      // Si el distrito ya cargó previamente, volvemos a renderizar para capturar las casillas
+      if (selectRuta.value) {
+        renderizarRuta(selectRuta.value, selectDistrito.value);
+      }
+    })
     .catch(() => { console.warn("No se pudo cargar Casillas_ubicacion.geojson"); });
 
   function cargarArchivosDistrito(distrito) {
@@ -320,7 +327,8 @@
     const tbody = document.getElementById('tabla-casillas-body');
     tbody.innerHTML = '';
 
-    const { rutasGeo, seccionesGeo, casillasGeo } = cacheGeojson;
+    const { rutasGeo, seccionesGeo } = cacheGeojson;
+    const casillasGeo = casillasGlobalGeo; // Usar la capa global unificada directamente
     let bounds = [];
     let nSecciones = 0, nCasillas = 0;
     datosRuta = { nombreRuta, distrito, featRuta: null, featSec: [], casillas: [] };
@@ -430,7 +438,7 @@
   selectRuta.addEventListener('change', e => renderizarRuta(e.target.value, selectDistrito.value));
   cargarArchivosDistrito('Distrito Local 11');
 
-  /* ---------- Mapa con calles para el PDF (se dibuja aparte, sin depender del visor) ---------- */
+  /* ---------- Mapa con calles para el PDF ---------- */
   const TILE = 256;
   function proyectar(lat, lng, z) {
     const s = TILE * Math.pow(2, z);
@@ -466,7 +474,6 @@
     const minLat = Math.min(...lats), maxLat = Math.max(...lats);
     const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
 
-    // Zoom más alto que permita ver toda la ruta (hasta 18 para que se lean las calles)
     const pad = 50;
     let z = 18;
     for (; z > 10; z--) {
@@ -482,7 +489,6 @@
     ctx.fillStyle = '#e5e7eb';
     ctx.fillRect(0, 0, W, H);
 
-    // Calles: teselas de OpenStreetMap
     const n = Math.pow(2, z);
     const jobs = [];
     for (let tx = Math.floor(tlx / TILE); tx <= Math.floor((tlx + W) / TILE); tx++) {
@@ -505,7 +511,6 @@
       });
     }
 
-    // Secciones (punteado + etiqueta)
     d.featSec.forEach(f => {
       const rings = anillos(f.geometry);
       if (!rings.length) return;
@@ -529,7 +534,6 @@
       }
     });
 
-    // Contorno de la ruta
     if (rutaRings.length) {
       trazar(rutaRings);
       ctx.fillStyle = 'rgba(0,51,102,0.08)';
@@ -538,7 +542,6 @@
       ctx.stroke();
     }
 
-    // Casillas numeradas
     d.casillas.forEach(c => {
       const [x, y] = px(c.lat, c.lng);
       ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI * 2);
@@ -550,7 +553,6 @@
       ctx.fillText(String(c.n), x, y + 1);
     });
 
-    // Atribución
     ctx.font = '12px Arial, sans-serif';
     ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
     ctx.fillStyle = 'rgba(255,255,255,0.85)';
@@ -576,7 +578,7 @@
         await cargada;
         cont.classList.remove('hidden');
       } else {
-        alert('No se pudo dibujar el mapa de calles (revisa tu conexión). El PDF se generará solo con la tabla.');
+        alert('No se pudo dibujar el mapa de calles. El PDF se generará solo con la tabla.');
       }
       await html2pdf().set({
         margin: 8,
