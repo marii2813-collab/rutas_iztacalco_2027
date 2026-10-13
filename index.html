@@ -33,3 +33,566 @@
   details.sec > summary::after { content:"▾"; transition:transform .2s; color:#64748b; }
   details.sec:not([open]) > summary::after { transform:rotate(-90deg); }
   details.sec .cuerpo { padding:0 16px 16px; }
+
+  /* Controles flotantes sobre el mapa */
+  .flotante { position:absolute; z-index:600; background:rgba(255,255,255,.95); border:1px solid var(--borde);
+              border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.15); backdrop-filter:blur(4px); }
+  #btn-panel { top:12px; left:12px; padding:8px 12px; font-size:12px; font-weight:700; color:var(--azul); cursor:pointer; }
+  #coords { bottom:12px; left:12px; padding:5px 10px; font-size:11px; font-family:ui-monospace,monospace; color:#334155; }
+  #leyenda { bottom:12px; right:12px; padding:8px 12px; font-size:11px; color:#334155; }
+  .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+
+  /* Franja de estadísticas inferior */
+  #stats { position:absolute; left:0; right:0; bottom:0; z-index:550; display:none; }
+  .stat { background:#f8fafc; border:1px solid var(--borde); border-radius:8px; padding:8px 10px; text-align:center; }
+  .stat b { display:block; font-size:18px; color:var(--azul); line-height:1.1; }
+  .stat span { font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
+
+  .pin-num { width:26px; height:26px; border-radius:50%; background:#e11d48; color:#fff; border:2px solid #fff;
+             box-shadow:0 1px 4px rgba(0,0,0,.45); font-weight:700; font-size:12px; display:flex;
+             align-items:center; justify-content:center; }
+  @media (max-width:768px){
+    #sidebar { position:absolute; top:0; bottom:0; left:0; width:86%; max-width:340px; box-shadow:4px 0 16px rgba(0,0,0,.2); }
+    #sidebar.colapsado { margin-left:-100%; }
+    #leyenda { display:none; }
+  }
+</style>
+</head>
+<body class="flex flex-col">
+
+<!-- BARRA SUPERIOR -->
+<header class="bg-electoral-blue text-white h-14 px-4 flex items-center justify-between shadow-md border-b-2 border-blue-400 flex-none">
+  <div class="flex items-center gap-3 min-w-0">
+    <div class="bg-white rounded-md h-9 w-9 flex items-center justify-center overflow-hidden flex-none">
+      <img src="img/logo_partido.png" alt="Logo" class="max-h-full max-w-full object-contain"
+           onerror="this.src='https://via.placeholder.com/40?text=P'">
+    </div>
+    <div class="min-w-0">
+      <h1 class="text-sm md:text-base font-bold tracking-wide truncate">Visor de Rutas Electorales</h1>
+      <p class="text-[11px] text-blue-200 truncate">Estructura Operativa Territorial · Representación General</p>
+    </div>
+  </div>
+  <div class="hidden md:flex items-center gap-2 text-[11px]">
+    <span class="bg-white/10 border border-white/20 rounded-full px-3 py-1" id="chip-distrito">Distrito Local 11</span>
+    <span class="bg-white/10 border border-white/20 rounded-full px-3 py-1" id="chip-ruta">--</span>
+  </div>
+</header>
+
+<!-- EXPLORADOR -->
+<div id="app">
+
+  <!-- PANEL LATERAL -->
+  <aside id="sidebar">
+    <details class="sec" open>
+      <summary>Ubicación</summary>
+      <div class="cuerpo">
+        <label class="block text-[11px] font-bold text-slate-600 mb-1">Distrito Local</label>
+        <select id="select-distrito" class="w-full p-2 border rounded-lg bg-slate-50 text-sm font-semibold text-slate-800 mb-3 focus:ring-2 focus:ring-blue-800 focus:outline-none">
+          <option value="Distrito Local 11">Distrito Local 11</option>
+          <option value="Distrito Local 15">Distrito Local 15</option>
+        </select>
+        <label class="block text-[11px] font-bold text-slate-600 mb-1">Ruta Electoral</label>
+        <select id="select-ruta" class="w-full p-2 border rounded-lg bg-slate-50 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-blue-800 focus:outline-none"></select>
+      </div>
+    </details>
+
+    <details class="sec" open>
+      <summary>Representante General</summary>
+      <div class="cuerpo text-xs space-y-3">
+        <p class="font-bold text-electoral-blue text-sm" id="info-ruta-nombre">Cargando...</p>
+        <div>
+          <p class="font-semibold text-slate-500">Nombre</p>
+          <p id="info-rg-nombre" class="font-bold text-blue-900 text-sm">--</p>
+        </div>
+        <div>
+          <p class="font-semibold text-slate-500">Teléfono</p>
+          <a id="info-rg-tel-link" href="#" class="font-bold text-blue-700 underline text-sm"><span id="info-rg-tel">--</span></a>
+        </div>
+        <div>
+          <p class="font-semibold text-slate-500">Secciones que abarca</p>
+          <p id="info-secciones" class="font-medium text-slate-800">--</p>
+        </div>
+      </div>
+    </details>
+
+    <details class="sec" open>
+      <summary>Capas en el mapa</summary>
+      <div class="cuerpo text-xs space-y-2">
+        <label class="flex items-center gap-2"><input type="checkbox" id="chk-contorno" checked> <span class="dot" style="background:#003366"></span>Contorno de la ruta</label>
+        <label class="flex items-center gap-2"><input type="checkbox" id="chk-secciones" checked> <span class="dot" style="background:#4169E1"></span>Secciones electorales</label>
+        <label class="flex items-center gap-2"><input type="checkbox" id="chk-casillas" checked> <span class="dot" style="background:#e11d48"></span>Casillas</label>
+      </div>
+    </details>
+
+    <details class="sec" open>
+      <summary>Descargas</summary>
+      <div class="cuerpo">
+        <button id="btn-pdf" onclick="generarPDF()" class="w-full bg-electoral-blue hover:bg-blue-900 disabled:opacity-60 hover:bg-blue-900 text-white font-bold py-2.5 px-4 rounded-lg shadow text-sm transition flex items-center justify-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          <span id="btn-pdf-txt">Generar PDF de Ruta</span>
+        </button>
+        <a href="#reporte" class="block text-center text-[11px] text-blue-700 underline mt-2">Ver tabla de casillas ↓</a>
+      </div>
+    </details>
+  </aside>
+
+  <!-- MAPA -->
+  <div id="mapa-wrap">
+    <div id="map"></div>
+
+    <button id="btn-panel" class="flotante" onclick="togglePanel()">☰ Panel</button>
+    <div id="coords" class="flotante">LAT — · LON —</div>
+    <div id="leyenda" class="flotante">
+      <div><span class="dot" style="background:#003366"></span>Ruta</div>
+      <div><span class="dot" style="background:#4169E1"></span>Secciones</div>
+      <div><span class="dot" style="background:#e11d48"></span>Casillas</div>
+    </div>
+
+    <!-- Franja de estadísticas -->
+    <div id="stats" class="p-2">
+      <div class="grid grid-cols-3 gap-2 max-w-md">
+        <div class="stat"><b id="st-rutas">0</b><span>Rutas</span></div>
+        <div class="stat"><b id="st-secciones">0</b><span>Secciones</span></div>
+        <div class="stat"><b id="st-casillas">0</b><span>Casillas</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REPORTE / PLANTILLA PDF -->
+<section id="reporte" class="container mx-auto p-4 md:p-6">
+  <div id="pdf-area" class="bg-white rounded-xl shadow p-6 border-t-4 border-electoral-blue">
+    <div class="flex justify-between items-center border-b-2 border-blue-900 pb-3 mb-4">
+      <div class="flex items-center space-x-3">
+        <img src="img/logo_partido.png" alt="Logo Partido" class="h-12 object-contain" onerror="this.src='https://via.placeholder.com/50?text=PARTIDO'">
+        <div>
+          <h3 id="pdf-ruta-titulo" class="text-lg font-bold text-electoral-blue">REPORTE OPERATIVO DE RUTA</h3>
+          <p class="text-xs text-slate-500" id="pdf-distrito-sub">Distrito Local</p>
+        </div>
+      </div>
+      <div class="text-right text-xs">
+        <p class="font-bold text-slate-800">RG: <span id="pdf-rg-nombre" class="text-blue-900">--</span></p>
+        <p class="font-bold text-slate-800">Teléfono: <span id="pdf-rg-tel" class="text-blue-900">--</span></p>
+        <p class="text-slate-500">Secciones: <span id="pdf-secciones-lista">--</span></p>
+      </div>
+    </div>
+
+    <div class="flex gap-3 mb-3">
+      <div class="stat flex-1"><b id="pdf-n-secciones">0</b><span>Secciones</span></div>
+      <div class="stat flex-1"><b id="pdf-n-casillas">0</b><span>Casillas</span></div>
+    </div>
+
+    <div id="pdf-map-container" class="w-full mb-4 hidden">
+      <div class="rounded border overflow-hidden">
+        <img id="pdf-map-img" class="w-full h-auto block" src="" alt="Mapa de Ruta con calles">
+      </div>
+      <p class="text-[10px] text-slate-500 mt-1">
+        Círculo rojo numerado = casilla (el número corresponde a la tabla) · Línea azul gruesa = límite de la ruta ·
+        Línea punteada = secciones electorales · Mapa © OpenStreetMap contributors
+      </p>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-electoral-blue text-white">
+            <th class="p-2 border text-center">#</th>
+            <th class="p-2 border">Sec.</th>
+            <th class="p-2 border">Casilla(s)</th>
+            <th class="p-2 border">Ubicación / Dirección del Inmueble</th>
+            <th class="p-2 border">Coordenadas</th>
+            <th class="p-2 border text-center">Google Maps</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-casillas-body" class="divide-y divide-slate-200"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<script>
+  /* ---------- Mapa ---------- */
+  let map = L.map('map', { preferCanvas: true, zoomControl: false }).setView([19.4018, -99.1329], 13);
+  L.control.zoom({ position: 'topright' }).addTo(map);
+  L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', crossOrigin: true
+  }).addTo(map);
+
+  let capaRutaContorno = L.layerGroup().addTo(map);
+  let capaSecciones = L.layerGroup().addTo(map);
+  let capaMarcadores = L.layerGroup().addTo(map);
+
+  let cacheGeojson = {};
+  let casillasGlobalGeo = null;
+  let datosRuta = { featRuta: null, featSec: [], casillas: [] };
+
+  const selectDistrito = document.getElementById('select-distrito');
+  const selectRuta = document.getElementById('select-ruta');
+
+  /* Panel lateral */
+  function togglePanel() {
+    document.getElementById('sidebar').classList.toggle('colapsado');
+    setTimeout(() => map.invalidateSize(), 300);
+  }
+  if (window.innerWidth <= 768) document.getElementById('sidebar').classList.add('colapsado');
+
+  /* Coordenadas del cursor */
+  map.on('mousemove', e => {
+    document.getElementById('coords').textContent =
+      `LAT ${e.latlng.lat.toFixed(5)} · LON ${e.latlng.lng.toFixed(5)}`;
+  });
+
+  /* Interruptores de capas */
+  [['chk-contorno', capaRutaContorno], ['chk-secciones', capaSecciones], ['chk-casillas', capaMarcadores]]
+    .forEach(([id, capa]) => {
+      document.getElementById(id).addEventListener('change', e => {
+        e.target.checked ? map.addLayer(capa) : map.removeLayer(capa);
+      });
+    });
+
+  function getProp(props, keys) {
+    if (!props) return null;
+    for (let k of keys) {
+      for (let p in props) {
+        if (p.toLowerCase() === k.toLowerCase() && props[p] !== undefined && props[p] !== null) return props[p];
+      }
+    }
+    return null;
+  }
+
+  const KEYS_RUTA = ['GEOMETRY1_', 'GEOMETRY1', 'ruta', 'nombre', 'id_ruta', 'layer', 'rutas'];
+  const KEYS_SECCION = ['SECCION', 'seccion', 'sec', 'sección'];
+
+  fetch(encodeURI('capas/Casillas_ubicacion.geojson'))
+    .then(r => r.json())
+    .then(data => { casillasGlobalGeo = data; })
+    .catch(() => { console.warn("No se pudo cargar Casillas_ubicacion.geojson"); });
+
+  function cargarArchivosDistrito(distrito) {
+    document.getElementById('chip-distrito').textContent = distrito;
+    const rutaContornosFile = `capas/${distrito}.-Rutas.geojson`;
+    const rutaSeccionesFile = `capas/${distrito}.-Secciones electorales.geojson`;
+
+    Promise.all([
+      fetch(encodeURI(rutaContornosFile)).then(r => r.json()).catch(() => null),
+      fetch(encodeURI(rutaSeccionesFile)).then(r => r.json()).catch(() => null)
+    ]).then(([rutasGeo, seccionesGeo]) => {
+      cacheGeojson = { rutasGeo, seccionesGeo, casillasGeo: casillasGlobalGeo };
+      selectRuta.innerHTML = '';
+      let rutasUnicas = new Set();
+
+      if (rutasGeo && rutasGeo.features) {
+        rutasGeo.features.forEach(f => {
+          const r = getProp(f.properties, KEYS_RUTA);
+          if (r) rutasUnicas.add(String(r).trim());
+        });
+      }
+      if (casillasGlobalGeo && casillasGlobalGeo.features) {
+        casillasGlobalGeo.features.forEach(f => {
+          const r = getProp(f.properties, KEYS_RUTA);
+          if (r) rutasUnicas.add(String(r).trim());
+        });
+      }
+
+      const listaOrdenada = Array.from(rutasUnicas).sort((a, b) =>
+        a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
+      listaOrdenada.forEach(nomRuta => {
+        let opt = document.createElement('option');
+        opt.value = nomRuta; opt.textContent = nomRuta;
+        selectRuta.appendChild(opt);
+      });
+
+      document.getElementById('st-rutas').textContent = listaOrdenada.length;
+      document.getElementById('stats').style.display = 'block';
+
+      if (selectRuta.options.length > 0) renderizarRuta(selectRuta.options[0].value, distrito);
+    });
+  }
+
+  function renderizarRuta(nombreRuta, distrito) {
+    capaRutaContorno.clearLayers();
+    capaSecciones.clearLayers();
+    capaMarcadores.clearLayers();
+    document.getElementById('chip-ruta').textContent = nombreRuta;
+
+    const tbody = document.getElementById('tabla-casillas-body');
+    tbody.innerHTML = '';
+
+    const { rutasGeo, seccionesGeo, casillasGeo } = cacheGeojson;
+    let bounds = [];
+    let nSecciones = 0, nCasillas = 0;
+    datosRuta = { nombreRuta, distrito, featRuta: null, featSec: [], casillas: [] };
+
+    if (rutasGeo && rutasGeo.features) {
+      const featRuta = rutasGeo.features.find(f => {
+        const r = getProp(f.properties, KEYS_RUTA);
+        return r && String(r).trim().toLowerCase() === nombreRuta.toLowerCase();
+      });
+
+      if (featRuta) {
+        datosRuta.featRuta = featRuta;
+        const props = featRuta.properties;
+        const nom = getProp(props, ['Propuesta_RG_IZTACALCO_Nombre(s)', 'nombre(s)', 'nombre', 'rg', 'representante']) || '';
+        const ap1 = getProp(props, ['Propuesta_RG_IZTACALCO_apellido 1', 'Propuesta_RG_IZTACALCO_apellido1', 'apellido 1', 'apellido1']) || '';
+        const ap2 = getProp(props, ['Propuesta_RG_IZTACALCO_apellido 2', 'Propuesta_RG_IZTACALCO_apellido2', 'apellido 2', 'apellido2']) || '';
+        let rgNombre = `${nom} ${ap1} ${ap2}`.trim();
+        if (!rgNombre) rgNombre = "Por Asignar";
+
+        const rgTel = getProp(props, ['Propuesta_RG_IZTACALCO_Celular', 'celular', 'telefono', 'tel', 'tel_rg']) || "--";
+        const seccionesLista = getProp(props, ['secciones', 'seccion', 'sec', 'SECCION']) || "--";
+
+        document.getElementById('info-ruta-nombre').textContent = `${nombreRuta} (${distrito})`;
+        document.getElementById('info-rg-nombre').textContent = rgNombre;
+        document.getElementById('info-rg-tel').textContent = rgTel;
+        document.getElementById('info-rg-tel-link').href = `tel:${String(rgTel).replace(/\s+/g, '')}`;
+        document.getElementById('info-secciones').textContent = seccionesLista;
+
+        document.getElementById('pdf-ruta-titulo').textContent = `REPORTE OPERATIVO - ${nombreRuta}`;
+        document.getElementById('pdf-distrito-sub').textContent = distrito;
+        document.getElementById('pdf-rg-nombre').textContent = rgNombre;
+        document.getElementById('pdf-rg-tel').textContent = rgTel;
+        document.getElementById('pdf-secciones-lista').textContent = seccionesLista;
+
+        capaRutaContorno.addLayer(L.geoJSON(featRuta, {
+          style: { color: '#003366', weight: 3, fillOpacity: 0.15 }
+        }));
+      }
+    }
+
+    let featSec = [];
+    if (seccionesGeo && seccionesGeo.features) {
+      featSec = seccionesGeo.features.filter(f => {
+        const r = getProp(f.properties, KEYS_RUTA);
+        return r && String(r).trim().toLowerCase() === nombreRuta.toLowerCase();
+      });
+      if (featSec.length > 0) {
+        capaSecciones.addLayer(L.geoJSON(featSec, {
+          style: { color: '#4169E1', weight: 1.5, dashArray: '4, 4', fillOpacity: 0.05 }
+        }));
+      }
+    }
+    datosRuta.featSec = featSec;
+
+    let lista = [];
+    if (casillasGeo && casillasGeo.features) {
+      casillasGeo.features.forEach(f => {
+        const rC = getProp(f.properties, KEYS_RUTA);
+        if (rC && String(rC).trim().toLowerCase() === nombreRuta.toLowerCase() && f.geometry && f.geometry.coordinates) {
+          lista.push({
+            lat: f.geometry.coordinates[1],
+            lng: f.geometry.coordinates[0],
+            seccion: getProp(f.properties, KEYS_SECCION) || '',
+            tipo: getProp(f.properties, ['casilla', 'casillas', 'nombre_casilla', 'tipo', 'CASILLAS', 'TIPO']) || '',
+            dir: getProp(f.properties, ['direccion', 'ubicacion', 'domicilio', 'DIRECCION', 'UBICACION']) || ''
+          });
+        }
+      });
+    }
+    lista.sort((x, y) => String(x.seccion).localeCompare(String(y.seccion), undefined, { numeric: true }));
+
+    lista.forEach((c, i) => {
+      c.n = i + 1;
+      const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}`;
+      let tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="p-2 border text-center font-bold text-red-600">${c.n}</td>
+        <td class="p-2 border font-bold">${c.seccion}</td>
+        <td class="p-2 border font-semibold text-blue-900">${c.tipo}</td>
+        <td class="p-2 border text-xs">${c.dir}</td>
+        <td class="p-2 border text-[10px] font-mono">${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}</td>
+        <td class="p-2 border text-center">
+          <a href="${gmapsUrl}" target="_blank" class="bg-blue-600 text-white font-bold px-2 py-1 rounded text-[10px] hover:bg-blue-800">🧭 Abrir en Maps</a>
+        </td>`;
+      tbody.appendChild(tr);
+
+      const icono = L.divIcon({ className: '', html: `<div class="pin-num">${c.n}</div>`, iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
+      const marker = L.marker([c.lat, c.lng], { icon: icono }).bindPopup(`
+        <b>#${c.n} · Sección ${c.seccion}</b><br><b>Casilla:</b> ${c.tipo}<br>${c.dir}<br>
+        <a href="${gmapsUrl}" target="_blank" style="color:white; background:#003366; padding:3px 6px; border-radius:3px; text-decoration:none; font-size:11px; display:inline-block; margin-top:4px;">Ver en Google Maps</a>`);
+      capaMarcadores.addLayer(marker);
+      bounds.push([c.lat, c.lng]);
+    });
+    datosRuta.casillas = lista;
+    nCasillas = lista.length;
+    nSecciones = featSec.length || new Set(lista.map(c => c.seccion)).size;
+    document.getElementById('pdf-n-secciones').textContent = nSecciones;
+    document.getElementById('pdf-n-casillas').textContent = nCasillas;
+
+    document.getElementById('st-secciones').textContent = nSecciones;
+    document.getElementById('st-casillas').textContent = nCasillas;
+
+    if (bounds.length > 0) map.fitBounds(bounds, { padding: [40, 40] });
+  }
+
+  selectDistrito.addEventListener('change', e => cargarArchivosDistrito(e.target.value));
+  selectRuta.addEventListener('change', e => renderizarRuta(e.target.value, selectDistrito.value));
+  cargarArchivosDistrito('Distrito Local 11');
+
+  /* ---------- Mapa con calles para el PDF (se dibuja aparte, sin depender del visor) ---------- */
+  const TILE = 256;
+  function proyectar(lat, lng, z) {
+    const s = TILE * Math.pow(2, z);
+    const sin = Math.sin(lat * Math.PI / 180);
+    return { x: (lng + 180) / 360 * s, y: (0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI)) * s };
+  }
+  function cargarImg(src) {
+    return new Promise(res => {
+      const im = new Image();
+      im.crossOrigin = 'anonymous';
+      im.onload = () => res(im);
+      im.onerror = () => res(null);
+      im.src = src;
+    });
+  }
+  function anillos(geom) {
+    if (!geom) return [];
+    if (geom.type === 'Polygon') return geom.coordinates;
+    if (geom.type === 'MultiPolygon') return geom.coordinates.flat();
+    return [];
+  }
+
+  async function construirMapaPDF(W, H) {
+    const d = datosRuta;
+    const rutaRings = d.featRuta ? anillos(d.featRuta.geometry) : [];
+    const secRings = d.featSec.flatMap(f => anillos(f.geometry));
+    const pts = [];
+    rutaRings.concat(secRings).forEach(r => r.forEach(p => pts.push([p[1], p[0]])));
+    d.casillas.forEach(c => pts.push([c.lat, c.lng]));
+    if (!pts.length) return null;
+
+    const lats = pts.map(p => p[0]), lngs = pts.map(p => p[1]);
+    const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+
+    // Zoom más alto que permita ver toda la ruta (hasta 18 para que se lean las calles)
+    const pad = 50;
+    let z = 18;
+    for (; z > 10; z--) {
+      const a = proyectar(maxLat, minLng, z), b = proyectar(minLat, maxLng, z);
+      if (Math.abs(b.x - a.x) <= W - 2 * pad && Math.abs(b.y - a.y) <= H - 2 * pad) break;
+    }
+    const c0 = proyectar((minLat + maxLat) / 2, (minLng + maxLng) / 2, z);
+    const tlx = c0.x - W / 2, tly = c0.y - H / 2;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#e5e7eb';
+    ctx.fillRect(0, 0, W, H);
+
+    // Calles: teselas de OpenStreetMap
+    const n = Math.pow(2, z);
+    const jobs = [];
+    for (let tx = Math.floor(tlx / TILE); tx <= Math.floor((tlx + W) / TILE); tx++) {
+      for (let ty = Math.floor(tly / TILE); ty <= Math.floor((tly + H) / TILE); ty++) {
+        if (ty < 0 || ty >= n) continue;
+        const wx = ((tx % n) + n) % n;
+        jobs.push(cargarImg(`https://tile.openstreetmap.org/${z}/${wx}/${ty}.png`).then(im => {
+          if (im) ctx.drawImage(im, tx * TILE - tlx, ty * TILE - tly);
+        }));
+      }
+    }
+    await Promise.all(jobs);
+
+    const px = (lat, lng) => { const p = proyectar(lat, lng, z); return [p.x - tlx, p.y - tly]; };
+    function trazar(rings) {
+      ctx.beginPath();
+      rings.forEach(r => {
+        r.forEach((p, i) => { const [x, y] = px(p[1], p[0]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+        ctx.closePath();
+      });
+    }
+
+    // Secciones (punteado + etiqueta)
+    d.featSec.forEach(f => {
+      const rings = anillos(f.geometry);
+      if (!rings.length) return;
+      trazar(rings);
+      ctx.fillStyle = 'rgba(65,105,225,0.06)';
+      ctx.fill('evenodd');
+      ctx.setLineDash([10, 7]); ctx.lineWidth = 2.5; ctx.strokeStyle = '#4169E1';
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      const sec = getProp(f.properties, KEYS_SECCION);
+      if (sec !== null) {
+        const xs = rings[0].map(p => p[0]), ys = rings[0].map(p => p[1]);
+        const [cx, cy] = px((Math.min(...ys) + Math.max(...ys)) / 2, (Math.min(...xs) + Math.max(...xs)) / 2);
+        ctx.font = 'bold 20px Arial, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+        ctx.strokeText(`Sec. ${sec}`, cx, cy);
+        ctx.fillStyle = '#1e3a8a';
+        ctx.fillText(`Sec. ${sec}`, cx, cy);
+      }
+    });
+
+    // Contorno de la ruta
+    if (rutaRings.length) {
+      trazar(rutaRings);
+      ctx.fillStyle = 'rgba(0,51,102,0.08)';
+      ctx.fill('evenodd');
+      ctx.lineWidth = 5; ctx.strokeStyle = '#003366';
+      ctx.stroke();
+    }
+
+    // Casillas numeradas
+    d.casillas.forEach(c => {
+      const [x, y] = px(c.lat, c.lng);
+      ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI * 2);
+      ctx.fillStyle = '#e11d48'; ctx.fill();
+      ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 15px Arial, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(String(c.n), x, y + 1);
+    });
+
+    // Atribución
+    ctx.font = '12px Arial, sans-serif';
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.fillRect(W - 220, H - 20, 220, 20);
+    ctx.fillStyle = '#334155';
+    ctx.fillText('© OpenStreetMap contributors', W - 6, H - 4);
+
+    try { return canvas.toDataURL('image/png'); } catch (e) { console.warn('Canvas bloqueado', e); return null; }
+  }
+
+  async function generarPDF() {
+    const btn = document.getElementById('btn-pdf');
+    const txt = document.getElementById('btn-pdf-txt');
+    const cont = document.getElementById('pdf-map-container');
+    const img = document.getElementById('pdf-map-img');
+    btn.disabled = true;
+    txt.textContent = 'Generando mapa y PDF...';
+    try {
+      const url = await construirMapaPDF(1200, 720);
+      if (url) {
+        const cargada = new Promise(r => { img.onload = r; img.onerror = r; });
+        img.src = url;
+        await cargada;
+        cont.classList.remove('hidden');
+      } else {
+        alert('No se pudo dibujar el mapa de calles (revisa tu conexión). El PDF se generará solo con la tabla.');
+      }
+      await html2pdf().set({
+        margin: 8,
+        filename: `Reporte_${selectDistrito.value}_${selectRuta.value.replace(/\s+/g, '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        enableLinks: true,
+        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '#pdf-map-container'] }
+      }).from(document.getElementById('pdf-area')).save();
+    } finally {
+      cont.classList.add('hidden');
+      btn.disabled = false;
+      txt.textContent = 'Generar PDF de Ruta';
+    }
+  }
+</script>
+</body>
+</html>
