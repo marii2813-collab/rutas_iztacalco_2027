@@ -7,24 +7,21 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare
-.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   :root { --azul:#003366; --azul-2:#0b4a8f; --fondo:#f1f5f9; --borde:#e2e8f0; }
   html,body { height:100%; margin:0; padding:0; }
   body { background:var(--fondo); font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; display:flex; flex-direction:column; }
   .bg-electoral-blue { background-color:var(--azul); }
   .text-electoral-blue { color:var(--azul); }
-  .border-electoral-blue 
-{ border-color:var(--azul); }
+  .border-electoral-blue { border-color:var(--azul); }
 
   #app { display:flex; height:calc(100vh - 88px); min-height:520px; position:relative; overflow:hidden; }
   #sidebar { width:360px; flex:none; background:#fff; border-right:1px solid var(--borde);
              overflow-y:auto; transition:margin-left .25s ease; z-index:500; display:flex; flex-direction:column; }
   #sidebar.colapsado { margin-left:-360px; }
   
-  #mapa-wrap { flex:1; position:relative; min-width:0; 
-height:100%; }
+  #mapa-wrap { flex:1; position:relative; min-width:0; height:100%; }
   #map { position:absolute; inset:0; width:100%; height:100%; }
 
   details.sec { border-bottom:1px solid var(--borde); }
@@ -38,14 +35,12 @@ height:100%; }
 
   .flotante { position:absolute; z-index:600; background:rgba(255,255,255,.95); border:1px solid var(--borde);
               border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.15); backdrop-filter:blur(4px); }
-  #btn-panel { top:12px; left:12px; 
-padding:8px 12px; font-size:12px; font-weight:700; color:var(--azul); cursor:pointer; }
+  #btn-panel { top:12px; left:12px; padding:8px 12px; font-size:12px; font-weight:700; color:var(--azul); cursor:pointer; }
   #coords { bottom:12px; left:12px; padding:5px 10px; font-size:11px; font-family:ui-monospace,monospace; color:#334155; }
   #leyenda { bottom:12px; right:12px; padding:8px 12px; font-size:11px; color:#334155; }
   .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
 
-  #stats { position:absolute; left:0; 
-right:0; bottom:0; z-index:550; display:none; }
+  #stats { position:absolute; left:0; right:0; bottom:0; z-index:550; display:none; }
   .stat { background:#f8fafc; border:1px solid var(--borde); border-radius:8px; padding:6px 8px; text-align:center; }
   .stat b { display:block; font-size:16px; color:var(--azul); line-height:1.1; }
   .stat span { font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
@@ -80,8 +75,7 @@ right:0; bottom:0; z-index:550; display:none; }
 
   @media (max-width:768px){
     #sidebar { position:absolute; top:0; bottom:0; left:0; width:86%; max-width:360px; box-shadow:4px 0 16px rgba(0,0,0,.2); }
-    #sidebar.colapsado 
-{ margin-left:-100%; }
+    #sidebar.colapsado { margin-left:-100%; }
     #leyenda { display:none; }
   }
 </style>
@@ -91,8 +85,7 @@ right:0; bottom:0; z-index:550; display:none; }
 <!-- BARRA SUPERIOR -->
 <header class="bg-electoral-blue text-white h-22 py-2 px-6 flex items-center justify-between shadow-md border-b-2 border-blue-400 flex-none">
   <div class="flex items-center gap-4 min-w-0">
-    <div class="bg-white rounded-lg h-16 w-16 flex items-center justify-center overflow-hidden 
-flex-none p-1 shadow-md">
+    <div class="bg-white rounded-lg h-16 w-16 flex items-center justify-center overflow-hidden flex-none p-1 shadow-md">
       <img src="img/logo_partido.png" alt="Logo Partido" class="max-h-full max-w-full object-contain"
            onerror="this.src='https://via.placeholder.com/80?text=PAN'">
     </div>
@@ -106,8 +99,7 @@ flex-none p-1 shadow-md">
     </div>
   </div>
   <div class="hidden md:flex items-center gap-2 text-xs">
-    <span class="bg-white/10 border border-white/20 rounded-full px-3 py-1 font-semibold text-sm" id="chip-distrito">Distrito Local 
-15</span>
+    <span class="bg-white/10 border border-white/20 rounded-full px-3 py-1 font-semibold text-sm" id="chip-distrito">Distrito Local 15</span>
     <span class="bg-white/10 border border-white/20 rounded-full px-3 py-1 font-semibold text-sm" id="chip-ruta">--</span>
   </div>
 </header>
@@ -120,15 +112,13 @@ flex-none p-1 shadow-md">
     <details class="sec" open>
       <summary>Ubicación</summary>
       <div class="cuerpo">
-        <label class="block 
-text-[11px] font-bold text-slate-600 mb-1">Distrito Local</label>
+        <label class="block text-[11px] font-bold text-slate-600 mb-1">Distrito Local</label>
         <select id="select-distrito" class="w-full p-2 border rounded-lg bg-slate-50 text-sm font-semibold text-slate-800 mb-3 focus:ring-2 focus:ring-blue-800 focus:outline-none">
           <option value="Distrito Local 15">Distrito Local 15</option>
           <option value="Distrito Local 11">Distrito Local 11</option>
         </select>
         <label class="block text-[11px] font-bold text-slate-600 mb-1">Ruta Electoral</label>
-        <select id="select-ruta" class="w-full p-2 border 
-rounded-lg bg-slate-50 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-blue-800 focus:outline-none"></select>
+        <select id="select-ruta" class="w-full p-2 border rounded-lg bg-slate-50 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-blue-800 focus:outline-none"></select>
         <button id="btn-general" type="button" onclick="alternarVistaGeneral()" class="w-full mt-3 bg-white border-2 border-electoral-blue text-electoral-blue font-bold py-2 px-3 rounded-lg text-xs hover:bg-blue-50 transition">🗺️ Ver mapa general del distrito</button>
       </div>
     </details>
@@ -152,8 +142,7 @@ rounded-lg bg-slate-50 text-sm font-semibold text-slate-800 focus:ring-2 focus:r
       </div>
     </details>
 
-    <details class="sec hidden" 
-id="sec-general" open>
+    <details class="sec hidden" id="sec-general" open>
       <summary>Rutas del distrito</summary>
       <div class="cuerpo">
         <p class="text-[11px] text-slate-500 mb-2">Toca una ruta para ver su detalle.</p>
@@ -164,8 +153,7 @@ id="sec-general" open>
     <details class="sec" open>
       <summary>Capas en el mapa</summary>
       <div class="cuerpo text-xs space-y-2">
-        <label class="flex 
-items-center gap-2"><input type="checkbox" id="chk-contorno" checked> <span class="dot" style="background:#003366"></span>Contorno de la ruta</label>
+        <label class="flex items-center gap-2"><input type="checkbox" id="chk-contorno" checked> <span class="dot" style="background:#003366"></span>Contorno de la ruta</label>
         <label class="flex items-center gap-2"><input type="checkbox" id="chk-secciones" checked> <span class="dot" style="background:#4169E1"></span>Secciones electorales</label>
         <label class="flex items-center gap-2"><input type="checkbox" id="chk-casillas" checked> <span class="dot" style="background:#e11d48"></span>Casillas</label>
       </div>
@@ -175,12 +163,10 @@ items-center gap-2"><input type="checkbox" id="chk-contorno" checked> <span clas
       <summary>Descargas</summary>
       <div class="cuerpo">
         <button id="btn-pdf" onclick="generarPDF()" class="w-full bg-electoral-blue hover:bg-blue-900 disabled:opacity-60 text-white font-bold py-2.5 px-4 rounded-lg shadow text-sm transition flex items-center justify-center gap-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" 
-stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
           <span id="btn-pdf-txt">Generar PDF de Ruta</span>
         </button>
-        <button id="btn-pdf-general" type="button" onclick="generarPDFGeneral()" class="w-full mt-2 bg-white border-2 border-electoral-blue text-electoral-blue disabled:opacity-60 font-bold 
-py-2 px-3 rounded-lg text-xs hover:bg-blue-50 transition">📄 Generar PDF general del distrito</button>
+        <button id="btn-pdf-general" type="button" onclick="generarPDFGeneral()" class="w-full mt-2 bg-white border-2 border-electoral-blue text-electoral-blue disabled:opacity-60 font-bold py-2 px-3 rounded-lg text-xs hover:bg-blue-50 transition">📄 Generar PDF general del distrito</button>
         <a href="#reporte" class="block text-center text-[11px] text-blue-700 underline mt-2">Ver tabla de casillas ↓</a>
       </div>
     </details>
@@ -190,8 +176,7 @@ py-2 px-3 rounded-lg text-xs hover:bg-blue-50 transition">📄 Generar PDF gener
   <div id="mapa-wrap">
     <div id="map"></div>
 
-    <button id="btn-panel" class="flotante" 
-onclick="togglePanel()">☰ Panel</button>
+    <button id="btn-panel" class="flotante" onclick="togglePanel()">☰ Panel</button>
     <div id="coords" class="flotante">LAT — · LON —</div>
     <div id="leyenda" class="flotante">
       <div><span class="dot" style="background:#003366"></span>Ruta</div>
@@ -209,16 +194,14 @@ onclick="togglePanel()">☰ Panel</button>
   </div>
 </div>
 
-<!-- REPORTE / PLANTILLA PDF (se 
-ajusta a 1 hoja por ruta) -->
+<!-- REPORTE / PLANTILLA PDF (se ajusta a 1 hoja por ruta) -->
 <section id="reporte" class="container mx-auto p-2 md:p-4">
   <div id="pdf-area" class="bg-white rounded-xl shadow p-4 border-t-4 border-electoral-blue">
 
     <!-- Encabezado -->
     <div class="flex justify-between items-center gap-4 pb-3 mb-3 border-b-2 border-blue-900">
       <div class="flex items-center gap-3 min-w-0">
-        <img src="img/logo_partido.png" alt="Logo Partido" class="logo-pdf flex-none" onerror="this.src='https://via
-.placeholder.com/80?text=PAN'">
+        <img src="img/logo_partido.png" alt="Logo Partido" class="logo-pdf flex-none" onerror="this.src='https://via.placeholder.com/80?text=PAN'">
         <img src="img/logo%20%C3%81ngel%20Luna.jpg" alt="Logo Ángel Luna" class="logo-pdf flex-none" onerror="this.src='img/logo Ángel Luna.jpg'">
         <div class="pl-3 ml-1 border-l-2 border-slate-200">
           <p id="pdf-caption" class="text-[9px] font-bold tracking-widest text-slate-500 uppercase">Reporte operativo de ruta electoral</p>
@@ -247,13 +230,11 @@ ajusta a 1 hoja por ruta) -->
         <div id="leyenda-pdf-ruta" class="flex items-center gap-4 text-[9px] text-slate-600">
           <span class="flex items-center gap-1"><span style="display:inline-block;width:11px;height:11px;border-radius:6px;background:#e11d48;"></span>Casilla (núm. de la tabla)</span>
           <span class="flex items-center gap-1"><span style="display:inline-block;width:18px;height:3px;background:#003366;"></span>Límite de la ruta</span>
-          <span class="flex items-center gap-1"><span style="display:inline-block;width:5px;height:2px;background:#4169E1;"></span><span style="display:inline-block;width:5px;height:2px;background:#4169E1;"></
-span><span style="display:inline-block;width:5px;height:2px;background:#4169E1;"></span>Sección electoral</span>
+          <span class="flex items-center gap-1"><span style="display:inline-block;width:5px;height:2px;background:#4169E1;"></span><span style="display:inline-block;width:5px;height:2px;background:#4169E1;"></span><span style="display:inline-block;width:5px;height:2px;background:#4169E1;"></span>Sección electoral</span>
         </div>
         <div id="leyenda-pdf-general" class="hidden flex items-center gap-4 text-[9px] text-slate-600">
           <span class="flex items-center gap-1"><span style="display:inline-block;width:18px;height:8px;background:#93c5fd;border:1.5px solid #1d4ed8;"></span>Cada color = una ruta</span>
-          <span class="flex items-center gap-1"><span style="display:inline-block;width:7px;height:7px;border-radius
-:4px;background:#1d4ed8;"></span>Casilla</span>
+          <span class="flex items-center gap-1"><span style="display:inline-block;width:7px;height:7px;border-radius:4px;background:#1d4ed8;"></span>Casilla</span>
         </div>
       </div>
       <div class="rounded border border-slate-300 overflow-hidden">
@@ -286,8 +267,7 @@ span><span style="display:inline-block;width:5px;height:2px;background:#4169E1;"
             <th class="p-2">Ruta</th>
             <th class="p-2">Representante General</th>
             <th class="p-2">Teléfono</th>
-            <th class="p-2">Secciones</
-th>
+            <th class="p-2">Secciones</th>
             <th class="p-2 text-center">Casillas</th>
           </tr>
         </thead>
@@ -298,8 +278,7 @@ th>
     <!-- Pie -->
     <div class="mt-3 pt-2 border-t border-slate-300 flex justify-between text-[9px] text-slate-500">
       <span>Generado el <span id="pdf-fecha">--</span></span>
-      <span id="pdf-pie">Visor de 
-Rutas Electorales</span>
+      <span id="pdf-pie">Visor de Rutas Electorales</span>
     </div>
   </div>
 </section>
@@ -330,8 +309,7 @@ Rutas Electorales</span>
   function alternarVistaGeneral() {
     const distrito = selectDistrito.value;
     if (selectRuta.value === GENERAL) {
-      const vuelta = ultimaRuta || (selectRuta.options[1] && 
-selectRuta.options[1].value);
+      const vuelta = ultimaRuta || (selectRuta.options[1] && selectRuta.options[1].value);
       if (vuelta) { selectRuta.value = vuelta; renderizarRuta(vuelta, distrito); }
     } else {
       selectRuta.value = GENERAL;
@@ -363,8 +341,7 @@ selectRuta.options[1].value);
     document.getElementById('pdf-rg-card').classList.toggle('hidden', general);
     document.getElementById('pdf-stat-rutas').classList.toggle('hidden', !general);
     document.getElementById('pdf-tabla-ruta').classList.toggle('hidden', general);
-    document.getElementById('pdf-tabla-general').classList.toggle('hidden', !
-general);
+    document.getElementById('pdf-tabla-general').classList.toggle('hidden', !general);
     document.getElementById('leyenda-pdf-ruta').classList.toggle('hidden', general);
     document.getElementById('leyenda-pdf-general').classList.toggle('hidden', !general);
     document.getElementById('pdf-mapa-titulo').textContent = general ? 'Mapa general de rutas' : 'Mapa de la ruta';
@@ -431,8 +408,7 @@ general);
 
   function cargarArchivosDistrito(distrito) {
     document.getElementById('chip-distrito').textContent = distrito;
-    const rutaContornosFile = 
-`capas/${distrito}.-Rutas.geojson`;
+    const rutaContornosFile = `capas/${distrito}.-Rutas.geojson`;
     const rutaSeccionesFile = `capas/${distrito}.-Secciones electorales.geojson`;
     const rutaRgFile        = `capas/${distrito}.-RG.geojson`;
 
@@ -440,8 +416,7 @@ general);
       fetch(encodeURI(rutaContornosFile)).then(r => r.json()).catch(() => null),
       fetch(encodeURI(rutaSeccionesFile)).then(r => r.json()).catch(() => null),
       fetch(encodeURI(rutaRgFile)).then(r => r.json()).catch(() => null)
-    ]).then(([rutasGeo, seccionesGeo, 
-rgGeo]) => {
+    ]).then(([rutasGeo, seccionesGeo, rgGeo]) => {
       cacheGeojson = { rutasGeo, seccionesGeo, rgGeo, casillasGeo: casillasGlobalGeo };
       selectRuta.innerHTML = '';
       let rutasUnicas = new Set();
@@ -463,8 +438,7 @@ rgGeo]) => {
         a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
       listaOrdenada.forEach(nomRuta => {
-        let opt = 
-document.createElement('option');
+        let opt = document.createElement('option');
         opt.value = nomRuta; opt.textContent = nomRuta;
         selectRuta.appendChild(opt);
       });
@@ -474,8 +448,7 @@ document.createElement('option');
 
       if (listaOrdenada.length > 0) {
         const optG = document.createElement('option');
-        optG.value = GENERAL; optG.textContent = 'Vista general 
-(todas las rutas)';
+        optG.value = GENERAL; optG.textContent = 'Vista general (todas las rutas)';
         selectRuta.insertBefore(optG, selectRuta.firstChild);
         selectRuta.value = listaOrdenada[0];
         renderizarRuta(listaOrdenada[0], distrito);
@@ -520,8 +493,7 @@ document.createElement('option');
       if (featRuta) {
         datosRuta.featRuta = featRuta;
         if (!propsRG) propsRG = featRuta.properties;
-        capaRutaContorno.add
-Layer(L.geoJSON(featRuta, {
+        capaRutaContorno.addLayer(L.geoJSON(featRuta, {
           style: { color: '#003366', weight: 3, fillOpacity: 0.15 }
         }));
       }
@@ -532,8 +504,7 @@ Layer(L.geoJSON(featRuta, {
 
     if (propsRG) {
       const nom = getProp(propsRG, ['Propuesta_RG_IZTACALACO_Nombre(s)', 'nombre(s)', 'nombre', 'rg', 'representante']) || '';
-      const ap1 = getProp(propsRG, ['Propuesta_RG_IZTACALACO_apellido 
-1', 'apellido 1', 'apellido1']) || '';
+      const ap1 = getProp(propsRG, ['Propuesta_RG_IZTACALACO_apellido 1', 'apellido 1', 'apellido1']) || '';
       const ap2 = getProp(propsRG, ['Propuesta_RG_IZTACALACO_apellido 2', 'apellido 2', 'apellido2']) || '';
       
       let compuesto = `${nom} ${ap1} ${ap2}`.trim();
@@ -579,8 +550,7 @@ Layer(L.geoJSON(featRuta, {
         const props = f.properties;
         const rC = getProp(props, ['Ruta', 'ruta', 'GEOMETRY1_']);
         
-        if (rC && 
-String(rC).trim().toLowerCase() === nombreRuta.toLowerCase()) {
+        if (rC && String(rC).trim().toLowerCase() === nombreRuta.toLowerCase()) {
           let lat = parseFloat(getProp(props, ['Latitud', 'latitud', 'lat', 'Y']));
           let lng = parseFloat(getProp(props, ['Longitud', 'longitud', 'lng', 'lon', 'X']));
           
@@ -597,8 +567,7 @@ String(rC).trim().toLowerCase() === nombreRuta.toLowerCase()) {
           if (secVal) setSecciones.add(secVal);
 
           const dirRaw = getProp(props, KEYS_DIRECCION) || '';
-          const dirInmueble = 
-toTitleCase(dirRaw);
+          const dirInmueble = toTitleCase(dirRaw);
 
           if (!isNaN(lat) && !isNaN(lng)) {
             lista.push({
@@ -613,8 +582,7 @@ toTitleCase(dirRaw);
       });
     }
 
-    const seccionesOrdenadas = Array.from(setSecciones).sort((a, b) 
-=> 
+    const seccionesOrdenadas = Array.from(setSecciones).sort((a, b) => 
       a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
     );
     const seccionesStr = seccionesOrdenadas.length > 0 ? seccionesOrdenadas.join(', ') : "--";
@@ -622,8 +590,7 @@ toTitleCase(dirRaw);
     document.getElementById('info-ruta-nombre').textContent = `${nombreRuta} (${distrito})`;
     document.getElementById('info-rg-nombre').textContent = rgNombre;
     document.getElementById('info-rg-tel-link').href = `tel:${String(rgTel).replace(/\s+/g, '')}`;
-    document.getElementById
-('info-rg-tel').textContent = rgTel;
+    document.getElementById('info-rg-tel').textContent = rgTel;
     document.getElementById('info-secciones').textContent = seccionesStr;
 
     document.getElementById('pdf-ruta-titulo').textContent = nombreRuta;
@@ -644,15 +611,13 @@ toTitleCase(dirRaw);
         <td class="p-1.5 border-b border-slate-200 font-bold text-blue-900">${c.seccion}</td>
         <td class="p-1.5 border-b border-slate-200 font-semibold text-slate-800">${c.casilla}</td>
         <td class="p-1.5 border-b border-slate-200 text-[11px]">${c.dir}</td>
-        <td class="p-1.5 border-b 
-border-slate-200 text-[10px] font-mono">${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}</td>
+        <td class="p-1.5 border-b border-slate-200 text-[10px] font-mono">${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}</td>
         <td class="p-1.5 border-b border-slate-200 text-center">
           <a href="${gmapsUrl}" target="_blank" class="bg-blue-600 text-white font-bold px-2 py-0.5 rounded text-[10px] hover:bg-blue-800">🧭 Maps</a>
         </td>`;
       tbody.appendChild(tr);
 
-      const icono = L.divIcon({ className: '', html: `<div class="pin-num">${c.n}</div>`, iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: 
-[0, -12] });
+      const icono = L.divIcon({ className: '', html: `<div class="pin-num">${c.n}</div>`, iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
       const marker = L.marker([c.lat, c.lng], { icon: icono }).bindPopup(`
         <b>#${c.n} · Sección ${c.seccion} (${c.casilla})</b><br>${c.dir}<br>
         <a href="${gmapsUrl}" target="_blank" style="color:white; background:#003366; padding:3px 6px; border-radius:3px; text-decoration:none; font-size:11px; display:inline-block; margin-top:4px;">Ver en Google Maps</a>`);
@@ -701,8 +666,7 @@ border-slate-200 text-[10px] font-mono">${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}
     const featSec = (seccionesGeo && seccionesGeo.features) ? seccionesGeo.features.filter(igual) : [];
     featSec.forEach(f => {
       const sNum = getProp(f.properties, KEYS_SECCION);
-      if (sNum) { const m = String(sNum).match(/^(\d+)/); secs.add(m ? m[1] : 
-String(sNum).trim()); }
+      if (sNum) { const m = String(sNum).match(/^(\d+)/); secs.add(m ? m[1] : String(sNum).trim()); }
     });
 
     const casillas = [];
@@ -727,8 +691,7 @@ String(sNum).trim()); }
     }
 
     const secciones = Array.from(secs).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-    return { nombre, feat, featSec, rgNombre, rgTel, casillas, 
-secciones };
+    return { nombre, feat, featSec, rgNombre, rgTel, casillas, secciones };
   }
 
   function renderizarGeneral(distrito) {
@@ -739,8 +702,7 @@ secciones };
     document.getElementById('chip-ruta').textContent = 'Vista general';
 
     const nombres = Array.from(selectRuta.options).map(o => o.value).filter(v => v !== GENERAL);
-    const rutas = nombres.map((n, i) => { const r = reunirRuta(n); r.color 
-= PALETA[i % PALETA.length]; return r; });
+    const rutas = nombres.map((n, i) => { const r = reunirRuta(n); r.color = PALETA[i % PALETA.length]; return r; });
     datosRuta = { general: true, distrito, rutas, featRuta: null, featSec: [], casillas: [] };
 
     const bounds = [];
@@ -748,8 +710,7 @@ secciones };
       if (r.feat) {
         const capa = L.geoJSON(r.feat, { style: { color: r.color, weight: 3, fillColor: r.color, fillOpacity: 0.2 } });
         capa.bindTooltip(`<span style="color:${r.color}">●</span> ${r.nombre}`, { permanent: true, direction: 'center', className: 'label-ruta' });
-        capa.on('click', () => 
-{ selectRuta.value = r.nombre; renderizarRuta(r.nombre, distrito); });
+        capa.on('click', () => { selectRuta.value = r.nombre; renderizarRuta(r.nombre, distrito); });
         capaRutaContorno.addLayer(capa);
         const b = capa.getBounds();
         if (b.isValid()) { bounds.push(b.getSouthWest()); bounds.push(b.getNorthEast()); }
@@ -768,14 +729,12 @@ secciones };
 
     // Panel lateral
     document.getElementById('info-ruta-nombre').textContent = `Vista general (${distrito})`;
-    document.getElementById('st-secciones').textContent = 
-todasSecc.size;
+    document.getElementById('st-secciones').textContent = todasSecc.size;
     document.getElementById('st-casillas').textContent = totalCasillas;
     document.getElementById('lista-rutas').innerHTML = rutas.map(r => `
       <button type="button" data-ruta="${r.nombre}" class="w-full flex items-center gap-2 text-left text-xs p-2 rounded-lg border border-slate-200 hover:bg-slate-50">
         <span style="display:inline-block;width:12px;height:12px;border-radius:6px;background:${r.color};flex:none"></span>
-        <span class="font-bold 
-text-slate-800 flex-1">${r.nombre}</span>
+        <span class="font-bold text-slate-800 flex-1">${r.nombre}</span>
         <span class="text-slate-500">${r.casillas.length} casillas</span>
       </button>`).join('');
 
@@ -783,14 +742,12 @@ text-slate-800 flex-1">${r.nombre}</span>
     document.getElementById('pdf-ruta-titulo').textContent = 'Vista general';
     document.getElementById('pdf-distrito-sub').textContent = distrito;
     document.getElementById('pdf-n-rutas').textContent = rutas.length;
-    document.getElementById('pdf-n-secciones').textContent = 
-todasSecc.size;
+    document.getElementById('pdf-n-secciones').textContent = todasSecc.size;
     document.getElementById('pdf-n-casillas').textContent = totalCasillas;
     document.getElementById('pdf-pie').textContent = `${distrito} · Vista general`;
     document.getElementById('tabla-general-body').innerHTML = rutas.map((r, i) => `
       <tr class="${i % 2 ? 'bg-slate-50' : ''}">
-        <td class="p-1.5 border-b border-slate-200 font-bold text-slate-800 whitespace-nowrap"><span style="display:inline-block;width:10px;height:10px;borde
-r-radius:5px;background:${r.color};margin-right:6px;"></span>${r.nombre}</td>
+        <td class="p-1.5 border-b border-slate-200 font-bold text-slate-800 whitespace-nowrap"><span style="display:inline-block;width:10px;height:10px;border-radius:5px;background:${r.color};margin-right:6px;"></span>${r.nombre}</td>
         <td class="p-1.5 border-b border-slate-200 font-semibold text-blue-900">${r.rgNombre}</td>
         <td class="p-1.5 border-b border-slate-200 whitespace-nowrap">${r.rgTel}</td>
         <td class="p-1.5 border-b border-slate-200 text-[10px]">${r.secciones.join(', ') || '--'}</td>
@@ -816,8 +773,7 @@ r-radius:5px;background:${r.color};margin-right:6px;"></span>${r.nombre}</td>
 
   /* =====================================================================
      MAPA DEL PDF (se dibuja aparte, ajustado a la ruta)
-     ==============================================
-======================= */
+     ===================================================================== */
   const TILE = 256;
   function proyectar(lat, lng, z) {
     const s = TILE * Math.pow(2, z);
@@ -843,8 +799,7 @@ r-radius:5px;background:${r.color};margin-right:6px;"></span>${r.nombre}</td>
   function puntoEnPoligono(x, y, ring) {
     let dentro = false;
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-      const xi = ring[i][0], yi = ring[i]
-[1], xj = ring[j][0], yj = ring[j][1];
+      const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
       if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) dentro = !dentro;
     }
     return dentro;
@@ -856,8 +811,7 @@ r-radius:5px;background:${r.color};margin-right:6px;"></span>${r.nombre}</td>
   }
 
   function colorConAlfa(hex, a) {
-    const n = parseInt(hex.slice(1), 
-16);
+    const n = parseInt(hex.slice(1), 16);
     return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
   }
   function rectRedondo(ctx, x, y, w, h, r) {
@@ -890,8 +844,7 @@ r-radius:5px;background:${r.color};margin-right:6px;"></span>${r.nombre}</td>
         const r = { x1: x - lw / 2, y1: y - lh / 2, x2: x + lw / 2, y2: y + lh / 2 };
         if (r.x1 < 2 || r.y1 < 2 || r.x2 > W - 2 || r.y2 > H - 2) continue;
         let solape = 0;
-        obstaculos.forEach(o => 
-{ solape += areaSolape(r, o); });
+        obstaculos.forEach(o => { solape += areaSolape(r, o); });
         const fuera = [[r.x1, r.y1], [r.x2, r.y1], [r.x1, r.y2], [r.x2, r.y2]]
           .filter(([qx, qy]) => !puntoEnPoligono(qx, qy, poly)).length;
         const puntaje = solape * 20 + fuera * 60 + Math.hypot(x - cx, y - cy);
@@ -920,8 +873,7 @@ r-radius:5px;background:${r.color};margin-right:6px;"></span>${r.nombre}</td>
     );
     zf = Math.max(10, Math.min(18.5, zf));
     const zt = Math.max(1, Math.min(19, Math.round(zf)));
-    const ts = TILE * Math.pow(2, zf - 
-zt);
+    const ts = TILE * Math.pow(2, zf - zt);
 
     const c0 = proyectar((minLat + maxLat) / 2, (minLng + maxLng) / 2, zf);
     const tlx = c0.x - W / 2, tly = c0.y - H / 2;
@@ -973,8 +925,7 @@ zt);
     let metros = opciones[0];
     opciones.forEach(m => { if (m / mpp <= objetivo * 1.15) metros = m; });
     const largo = metros / mpp;
-    const etiqueta = metros >= 1000 ? `${metros / 1000} km` : `${metros} 
-m`;
+    const etiqueta = metros >= 1000 ? `${metros / 1000} km` : `${metros} m`;
     ctx.font = `bold ${5.8 * k}px Arial, sans-serif`;
     const caja = Math.max(largo, ctx.measureText(etiqueta).width) + 8 * k;
     const sx = 8 * k, sy = H - 7 * k;
@@ -1015,8 +966,7 @@ m`;
     // La ruta es la protagonista: el encuadre se calcula sobre su contorno (y sus casillas)
     const baseRings = rutaRings.length ? rutaRings : secRings;
     const pts = [];
-    baseRings.forEach(r => 
-r.forEach(p => pts.push([p[1], p[0]])));
+    baseRings.forEach(r => r.forEach(p => pts.push([p[1], p[0]])));
     d.casillas.forEach(c => pts.push([c.lat, c.lng]));
     if (!pts.length) return null;
 
@@ -1027,8 +977,7 @@ r.forEach(p => pts.push([p[1], p[0]])));
       ctx.beginPath();
       ctx.rect(0, 0, W, H);
       agregarRings(rutaRings);
-      ctx.fillStyle = 
-'rgba(255,255,255,0.45)';
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
       ctx.fill('evenodd');
     }
 
@@ -1091,8 +1040,7 @@ r.forEach(p => pts.push([p[1], p[0]])));
     // Casillas numeradas (encima de todo)
     d.casillas.forEach(c => {
       const [x, y] = px(c.lat, c.lng);
-      ctx.beginPath(); ctx.arc(x, y, RC, 
-0, Math.PI * 2);
+      ctx.beginPath(); ctx.arc(x, y, RC, 0, Math.PI * 2);
       ctx.fillStyle = '#e11d48'; ctx.fill();
       ctx.lineWidth = 1.6 * k; ctx.strokeStyle = '#fff'; ctx.stroke();
       ctx.fillStyle = '#fff';
@@ -1115,8 +1063,7 @@ r.forEach(p => pts.push([p[1], p[0]])));
     });
     if (!pts.length) return null;
 
-    const { canvas, ctx, px, trazar, zf, minLat, maxLat } = await 
-lienzoBase(pts, W, H, k);
+    const { canvas, ctx, px, trazar, zf, minLat, maxLat } = await lienzoBase(pts, W, H, k);
 
     // Polígonos de cada ruta
     d.rutas.forEach(r => {
@@ -1141,8 +1088,7 @@ lienzoBase(pts, W, H, k);
       obstaculos.push({ x1: x - RD - 1, y1: y - RD - 1, x2: x + RD + 1, y2: y + RD + 1 });
     }));
 
-    // Etiqueta con el nombre de cada 
-ruta (en el mejor lugar libre de su polígono)
+    // Etiqueta con el nombre de cada ruta (en el mejor lugar libre de su polígono)
     const fs = 8 * k;
     ctx.font = `bold ${fs}px Arial, sans-serif`;
     d.rutas.forEach(r => {
@@ -1163,8 +1109,7 @@ ruta (en el mejor lugar libre de su polígono)
       ctx.fillText(r.nombre, mejor.x, mejor.y + 0.5 * k);
     });
 
-    decorarMapa(ctx, W, H, k, zf, 
-minLat, maxLat);
+    decorarMapa(ctx, W, H, k, zf, minLat, maxLat);
     return lienzoAUrl(canvas);
   }
 
@@ -1173,8 +1118,7 @@ minLat, maxLat);
      ===================================================================== */
   function esperarImagenes(root) {
     return Promise.all(Array.from(root.querySelectorAll('img')).map(im =>
-      (im.complete && 
-im.naturalWidth) ? Promise.resolve()
+      (im.complete && im.naturalWidth) ? Promise.resolve()
         : new Promise(r => { im.onload = r; im.onerror = r; setTimeout(r, 4000); })
     ));
   }
@@ -1217,8 +1161,7 @@ im.naturalWidth) ? Promise.resolve()
       doc.querySelector('#pdf-fecha').textContent =
         new Date().toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' });
 
-      const cont = doc.querySelector('
-#pdf-map-container');
+      const cont = doc.querySelector('#pdf-map-container');
       const img = doc.querySelector('#pdf-map-img');
       cont.classList.remove('hidden');
       img.style.height = '0px';
@@ -1258,8 +1201,7 @@ im.naturalWidth) ? Promise.resolve()
         filename: `Reporte_${selectDistrito.value}_${selectRuta.value === GENERAL ? 'General' : selectRuta.value.replace(/\s+/g, '_')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 3, useCORS: true, scrollX: 0, scrollY: 0, windowWidth: ANCHO + 40 },
-        jsPDF: { unit: 'mm', format: 'a4', 
-orientation: 'portrait' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         enableLinks: true,
         pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '#pdf-map-container'] }
       }).from(doc).save();
