@@ -765,7 +765,10 @@
     document.getElementById('tabla-general-body').innerHTML = rutas.map((r, i) => `
       <tr class="${i % 2 ? 'bg-slate-50' : ''}">
         <td class="p-1.5 border-b border-slate-200 font-bold text-slate-800 whitespace-nowrap"><span style="display:inline-block;width:10px;height:10px;border-radius:5px;background:${r.color};margin-right:6px;"></span>${r.nombre}</td>
-        <td class="p-1.5 border-b border-slate-200 font-semibold text-blue-900">${r.rgNombre}</td>
+        <td class="p-1.5 border-b border-slate-200">
+          <div class="font-semibold text-blue-900">${r.rgNombre}</div>
+          <div class="font-mono text-[9px] text-slate-600">Clave: ${r.rgClave}</div>
+        </td>
         <td class="p-1.5 border-b border-slate-200 whitespace-nowrap">${r.rgTel}</td>
         <td class="p-1.5 border-b border-slate-200 text-[10px]">${r.secciones.join(', ') || '--'}</td>
         <td class="p-1.5 border-b border-slate-200 text-center font-bold">${r.total}</td>
