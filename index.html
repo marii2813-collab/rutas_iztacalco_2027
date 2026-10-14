@@ -203,12 +203,8 @@
 
     <!-- Resumen -->
     <div class="flex gap-2 mb-3 items-stretch">
-      <div class="stat py-1" style="min-width:86px"><b id="pdf-n-secciones" class="text-lg">0</b><span>Secciones</span></div>
-      <div class="stat py-1" style="min-width:86px"><b id="pdf-n-casillas" class="text-lg">0</b><span>Casillas</span></div>
-      <div class="flex-1 border rounded-lg px-3 py-1 bg-slate-50">
-        <p class="text-[9px] font-bold tracking-widest text-slate-500 uppercase mb-1">Secciones que abarca</p>
-        <div id="pdf-secciones-lista" class="flex flex-wrap gap-1"></div>
-      </div>
+      <div class="stat flex-1 py-1"><b id="pdf-n-secciones" class="text-lg">0</b><span>Secciones</span></div>
+      <div class="stat flex-1 py-1"><b id="pdf-n-casillas" class="text-lg">0</b><span>Casillas</span></div>
     </div>
 
     <!-- Mapa -->
@@ -507,9 +503,6 @@
     document.getElementById('pdf-rg-nombre').textContent = rgNombre;
     document.getElementById('pdf-rg-tel').textContent = rgTel;
     document.getElementById('pdf-pie').textContent = `${distrito} · ${nombreRuta}`;
-    document.getElementById('pdf-secciones-lista').innerHTML = seccionesOrdenadas.length
-      ? seccionesOrdenadas.map(sc => `<span style="display:inline-block;background:#e8eef7;color:#003366;border:1px solid #c7d4e8;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;">${sc}</span>`).join('')
-      : '--';
 
     lista.sort((x, y) => String(x.seccion).localeCompare(String(y.seccion), undefined, { numeric: true }));
 
