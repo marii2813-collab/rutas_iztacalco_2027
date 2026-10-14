@@ -119,6 +119,7 @@
         </select>
         <label class="block text-[11px] font-bold text-slate-600 mb-1">Ruta Electoral</label>
         <select id="select-ruta" class="w-full p-2 border rounded-lg bg-slate-50 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-blue-800 focus:outline-none"></select>
+        <button id="btn-general" type="button" onclick="alternarVistaGeneral()" class="w-full mt-3 bg-white border-2 border-electoral-blue text-electoral-blue font-bold py-2 px-3 rounded-lg text-xs hover:bg-blue-50 transition">🗺️ Ver mapa general del distrito</button>
       </div>
     </details>
 
@@ -165,6 +166,7 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
           <span id="btn-pdf-txt">Generar PDF de Ruta</span>
         </button>
+        <button id="btn-pdf-general" type="button" onclick="generarPDFGeneral()" class="w-full mt-2 bg-white border-2 border-electoral-blue text-electoral-blue disabled:opacity-60 font-bold py-2 px-3 rounded-lg text-xs hover:bg-blue-50 transition">📄 Generar PDF general del distrito</button>
         <a href="#reporte" class="block text-center text-[11px] text-blue-700 underline mt-2">Ver tabla de casillas ↓</a>
       </div>
     </details>
@@ -302,6 +304,35 @@
   const GENERAL = '__GENERAL__';
   const PALETA = ['#1d4ed8','#dc2626','#059669','#d97706','#7c3aed','#0891b2','#db2777','#65a30d','#ea580c','#4f46e5','#0d9488','#a16207'];
   let textoBtnPDF = 'Generar PDF de Ruta';
+  let ultimaRuta = null;
+
+  function alternarVistaGeneral() {
+    const distrito = selectDistrito.value;
+    if (selectRuta.value === GENERAL) {
+      const vuelta = ultimaRuta || (selectRuta.options[1] && selectRuta.options[1].value);
+      if (vuelta) { selectRuta.value = vuelta; renderizarRuta(vuelta, distrito); }
+    } else {
+      selectRuta.value = GENERAL;
+      renderizarGeneral(distrito);
+    }
+  }
+
+  // Genera el PDF general sin importar en qué ruta estés; al terminar regresa a tu ruta
+  async function generarPDFGeneral() {
+    const distrito = selectDistrito.value;
+    const previa = selectRuta.value;
+    if (previa === GENERAL) { return generarPDF(); }
+    const btn = document.getElementById('btn-pdf-general');
+    btn.disabled = true;
+    selectRuta.value = GENERAL;
+    renderizarGeneral(distrito);
+    try { await generarPDF(); }
+    finally {
+      selectRuta.value = previa;
+      renderizarRuta(previa, distrito);
+      btn.disabled = false;
+    }
+  }
 
   // Alterna entre la vista de una ruta y la vista general
   function ajustarVista(general) {
@@ -316,6 +347,8 @@
     document.getElementById('pdf-mapa-titulo').textContent = general ? 'Mapa general de rutas' : 'Mapa de la ruta';
     document.getElementById('pdf-caption').textContent = general ? 'Reporte general del distrito' : 'Reporte operativo de ruta electoral';
     textoBtnPDF = general ? 'Generar PDF General' : 'Generar PDF de Ruta';
+    document.getElementById('btn-general').textContent = general ? '← Volver a una ruta' : '🗺️ Ver mapa general del distrito';
+    document.getElementById('btn-pdf-general').classList.toggle('hidden', general);
     document.getElementById('btn-pdf-txt').textContent = textoBtnPDF;
   }
 
@@ -426,6 +459,7 @@
   function renderizarRuta(nombreRuta, distrito) {
     if (nombreRuta === GENERAL) { renderizarGeneral(distrito); return; }
     ajustarVista(false);
+    ultimaRuta = nombreRuta;
     capaRutaContorno.clearLayers();
     capaSecciones.clearLayers();
     capaMarcadores.clearLayers();
