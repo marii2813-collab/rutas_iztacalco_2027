@@ -72,16 +72,14 @@
 
 <!-- BARRA SUPERIOR -->
 <header class="bg-electoral-blue text-white h-20 px-6 flex items-center justify-between shadow-md border-b-2 border-blue-400 flex-none">
-  <div class="flex items-center gap-4 min-w-0">
-    <!-- Logotipo del partido grande -->
-    <div class="bg-white rounded-lg h-14 w-14 flex items-center justify-center overflow-hidden flex-none p-1.5 shadow-md">
+  <div class="flex items-center gap-3 min-w-0">
+    <div class="bg-white rounded-lg h-14 w-14 flex items-center justify-center overflow-hidden flex-none p-1 shadow-md">
       <img src="img/logo_partido.png" alt="Logo Partido" class="max-h-full max-w-full object-contain"
            onerror="this.src='https://via.placeholder.com/70?text=PAN'">
     </div>
-    <!-- Contenedor preparado para Logo Ángel Luna -->
-    <div id="logo-angel-luna-container" class="hidden bg-white rounded-lg h-14 w-14 flex items-center justify-center overflow-hidden flex-none p-1.5 shadow-md">
+    <div class="bg-white rounded-lg h-14 w-14 flex items-center justify-center overflow-hidden flex-none p-1 shadow-md">
       <img src="img/logo_angel_luna.png" alt="Logo Ángel Luna" class="max-h-full max-w-full object-contain"
-           onerror="this.style.display='none'">
+           onerror="this.src='https://via.placeholder.com/70?text=%Cngel+Luna'">
     </div>
     <div class="min-w-0">
       <h1 class="text-base md:text-lg font-bold tracking-wide truncate">Visor de Rutas Electorales</h1>
@@ -178,8 +176,9 @@
 <section id="reporte" class="container mx-auto p-4 md:p-6">
   <div id="pdf-area" class="bg-white rounded-xl shadow p-6 border-t-4 border-electoral-blue">
     <div class="flex justify-between items-center border-b-2 border-blue-900 pb-4 mb-4">
-      <div class="flex items-center space-x-4">
-        <img src="img/logo_partido.png" alt="Logo Partido" class="h-20 w-20 object-contain p-1 border rounded-lg shadow-sm" onerror="this.src='https://via.placeholder.com/80?text=PAN'">
+      <div class="flex items-center space-x-3">
+        <img src="img/logo_partido.png" alt="Logo Partido" class="h-16 w-16 object-contain p-1 border rounded-lg shadow-sm" onerror="this.src='https://via.placeholder.com/60?text=PAN'">
+        <img src="img/logo_angel_luna.png" alt="Logo Ángel Luna" class="h-16 w-16 object-contain p-1 border rounded-lg shadow-sm" onerror="this.src='https://via.placeholder.com/60?text=%Cngel+Luna'">
         <div>
           <h3 id="pdf-ruta-titulo" class="text-xl font-bold text-electoral-blue">REPORTE OPERATIVO DE RUTA</h3>
           <p class="text-xs text-slate-500 font-semibold mt-0.5" id="pdf-distrito-sub">Distrito Local</p>
@@ -211,7 +210,8 @@
         <thead>
           <tr class="bg-electoral-blue text-white">
             <th class="p-2 border text-center">#</th>
-            <th class="p-2 border">Sec. / Casilla</th>
+            <th class="p-2 border">Sección</th>
+            <th class="p-2 border">Casilla</th>
             <th class="p-2 border">Dirección del Inmueble</th>
             <th class="p-2 border">Coordenadas</th>
             <th class="p-2 border text-center">Google Maps</th>
@@ -273,7 +273,6 @@
   const KEYS_RUTA = ['ruta', 'GEOMETRY1_', 'GEOMETRY1', 'nombre', 'id_ruta', 'layer', 'rutas'];
   const KEYS_SECCION = ['seccion', 'SECCION', 'sec', 'sección'];
 
-  // Cargar Casillas_ubicacion.geojson usando los nombres exactos vistos en la imagen (Ruta, Casillas, Dirección, Latitud, Longitud)
   fetch(encodeURI('capas/Casillas_ubicacion.geojson'))
     .then(r => r.json())
     .then(data => { 
@@ -385,7 +384,6 @@
     let featSec = [];
     let setSecciones = new Set();
 
-    // Dibujar polígonos de secciones desde el archivo de secciones electorales del distrito
     if (seccionesGeo && seccionesGeo.features) {
       featSec = seccionesGeo.features.filter(f => {
         const r = getProp(f.properties, KEYS_RUTA);
@@ -393,13 +391,17 @@
       });
       featSec.forEach(f => {
         const sNum = getProp(f.properties, KEYS_SECCION);
-        if (sNum) setSecciones.add(String(sNum).trim());
+        if (sNum) {
+          let matchS = String(sNum).match(/^(\d+)/);
+          setSecciones.add(matchS ? matchS[1] : String(sNum).trim());
+        }
         
         const secLayer = L.geoJSON(f, {
           style: { color: '#4169E1', weight: 1.5, dashArray: '4, 4', fillOpacity: 0.05 }
         });
         if (sNum) {
-          secLayer.bindTooltip(`${sNum}`, {
+          let matchS = String(sNum).match(/^(\d+)/);
+          secLayer.bindTooltip(matchS ? matchS[1] : String(sNum), {
             permanent: true,
             direction: 'center',
             className: 'label-seccion'
@@ -410,7 +412,6 @@
     }
     datosRuta.featSec = featSec;
 
-    // Extracción estricta desde Casillas_ubicacion.geojson según la estructura mostrada en la captura
     let lista = [];
     if (casillasGeo && casillasGeo.features) {
       casillasGeo.features.forEach(f => {
@@ -418,7 +419,6 @@
         const rC = getProp(props, ['Ruta', 'ruta', 'GEOMETRY1_']);
         
         if (rC && String(rC).trim().toLowerCase() === nombreRuta.toLowerCase()) {
-          // Extraer coordenadas directas o de la geometría del GeoJSON
           let lat = parseFloat(getProp(props, ['Latitud', 'latitud', 'lat', 'Y']));
           let lng = parseFloat(getProp(props, ['Longitud', 'longitud', 'lng', 'lon', 'X']));
           
@@ -427,16 +427,21 @@
             lat = f.geometry.coordinates[1];
           }
 
-          const numCasillaSec = getProp(props, ['Casillas', 'casillas', 'casilla', 'SECCION', 'seccion']) || '';
-          if (numCasillaSec) setSecciones.add(String(numCasillaSec).trim());
+          const rawCasilla = getProp(props, ['Casillas', 'casillas', 'casilla', 'SECCION', 'seccion']) || '';
+          let matchSec = String(rawCasilla).match(/^(\d+)/);
+          let secVal = matchSec ? matchSec[1] : String(rawCasilla).trim();
+          let casillaVal = String(rawCasilla).trim();
 
-          const dirInmueble = getProp(props, ['Dirección', 'direccion', 'Direccion', 'ubicacion', 'domicilio']) || '';
+          if (secVal) setSecciones.add(secVal);
+
+          const dirInmueble = getProp(props, ['dirección', 'Dirección', 'direccion', 'Direccion', 'ubicacion', 'domicilio']) || '';
 
           if (!isNaN(lat) && !isNaN(lng)) {
             lista.push({
               lat: lat,
               lng: lng,
-              seccion: numCasillaSec,
+              seccion: secVal,
+              casilla: casillaVal,
               dir: dirInmueble
             });
           }
@@ -469,6 +474,7 @@
       tr.innerHTML = `
         <td class="p-2 border text-center font-bold text-red-600">${c.n}</td>
         <td class="p-2 border font-bold text-blue-900">${c.seccion}</td>
+        <td class="p-2 border font-semibold text-slate-800">${c.casilla}</td>
         <td class="p-2 border text-xs">${c.dir}</td>
         <td class="p-2 border text-[10px] font-mono">${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}</td>
         <td class="p-2 border text-center">
@@ -478,7 +484,7 @@
 
       const icono = L.divIcon({ className: '', html: `<div class="pin-num">${c.n}</div>`, iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
       const marker = L.marker([c.lat, c.lng], { icon: icono }).bindPopup(`
-        <b>#${c.n} · Sección ${c.seccion}</b><br>${c.dir}<br>
+        <b>#${c.n} · Sección ${c.seccion} (${c.casilla})</b><br>${c.dir}<br>
         <a href="${gmapsUrl}" target="_blank" style="color:white; background:#003366; padding:3px 6px; border-radius:3px; text-decoration:none; font-size:11px; display:inline-block; margin-top:4px;">Ver en Google Maps</a>`);
       capaMarcadores.addLayer(marker);
       bounds.push([c.lat, c.lng]);
@@ -586,14 +592,16 @@
 
       const sec = getProp(f.properties, KEYS_SECCION);
       if (sec !== null) {
+        let matchS = String(sec).match(/^(\d+)/);
+        let secClean = matchS ? matchS[1] : String(sec);
         const xs = rings[0].map(p => p[0]), ys = rings[0].map(p => p[1]);
         const [cx, cy] = px((Math.min(...ys) + Math.max(...ys)) / 2, (Math.min(...xs) + Math.max(...xs)) / 2);
         ctx.font = 'bold 20px Arial, sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(255,255,255,0.95)';
-        ctx.strokeText(`${sec}`, cx, cy);
+        ctx.strokeText(secClean, cx, cy);
         ctx.fillStyle = '#1e3a8a';
-        ctx.fillText(`${sec}`, cx, cy);
+        ctx.fillText(secClean, cx, cy);
       }
     });
 
