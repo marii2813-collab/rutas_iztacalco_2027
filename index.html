@@ -41,9 +41,9 @@
   .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
 
   #stats { position:absolute; left:0; right:0; bottom:0; z-index:550; display:none; }
-  .stat { background:#f8fafc; border:1px solid var(--borde); border-radius:8px; padding:8px 10px; text-align:center; }
-  .stat b { display:block; font-size:18px; color:var(--azul); line-height:1.1; }
-  .stat span { font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
+  .stat { background:#f8fafc; border:1px solid var(--borde); border-radius:8px; padding:6px 8px; text-align:center; }
+  .stat b { display:block; font-size:16px; color:var(--azul); line-height:1.1; }
+  .stat span { font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
 
   .pin-num { width:26px; height:26px; border-radius:50%; background:#e11d48; color:#fff; border:2px solid #fff;
              box-shadow:0 1px 4px rgba(0,0,0,.45); font-weight:700; font-size:12px; display:flex;
@@ -172,49 +172,49 @@
   </div>
 </div>
 
-<!-- REPORTE / PLANTILLA PDF -->
-<section id="reporte" class="container mx-auto p-4 md:p-6">
-  <div id="pdf-area" class="bg-white rounded-xl shadow p-6 border-t-4 border-electoral-blue">
-    <div class="flex justify-between items-center border-b-2 border-blue-900 pb-4 mb-4">
-      <div class="flex items-center space-x-4">
-        <img src="img/logo_partido.png" alt="Logo Partido" class="h-20 w-20 object-contain p-1 border rounded-lg shadow-sm" onerror="this.src='https://via.placeholder.com/80?text=PAN'">
-        <img src="img/logo%20%C3%81ngel%20Luna.jpg" alt="Logo Ángel Luna" class="h-20 w-20 object-contain p-1 border rounded-lg shadow-sm" onerror="this.src='img/logo Ángel Luna.jpg'">
+<!-- REPORTE / PLANTILLA PDF (Optimizado para 1 sola hoja y mapa amplio) -->
+<section id="reporte" class="container mx-auto p-2 md:p-4">
+  <div id="pdf-area" class="bg-white rounded-xl shadow p-4 border-t-4 border-electoral-blue">
+    <div class="flex justify-between items-center border-b-2 border-blue-900 pb-3 mb-3">
+      <div class="flex items-center space-x-3">
+        <img src="img/logo_partido.png" alt="Logo Partido" class="h-16 w-16 object-contain p-1 border rounded-lg shadow-sm" onerror="this.src='https://via.placeholder.com/80?text=PAN'">
+        <img src="img/logo%20%C3%81ngel%20Luna.jpg" alt="Logo Ángel Luna" class="h-16 w-16 object-contain p-1 border rounded-lg shadow-sm" onerror="this.src='img/logo Ángel Luna.jpg'">
         <div>
-          <h2 id="pdf-ruta-titulo" class="text-2xl font-bold text-electoral-blue">REPORTE OPERATIVO DE RUTA</h2>
-          <p class="text-sm text-slate-600 font-bold mt-0.5" id="pdf-distrito-sub">Distrito Local</p>
+          <h2 id="pdf-ruta-titulo" class="text-xl font-bold text-electoral-blue">REPORTE OPERATIVO DE RUTA</h2>
+          <p class="text-xs text-slate-600 font-bold mt-0.5" id="pdf-distrito-sub">Distrito Local</p>
         </div>
       </div>
-      <div class="text-right text-xs md:text-sm space-y-1">
+      <div class="text-right text-xs space-y-0.5">
         <p class="font-bold text-slate-800">RG: <span id="pdf-rg-nombre" class="text-blue-900">--</span></p>
         <p class="font-bold text-slate-800">Teléfono: <span id="pdf-rg-tel" class="text-blue-900">--</span></p>
       </div>
     </div>
 
-    <div class="flex gap-3 mb-4">
-      <div class="stat flex-1"><b id="pdf-n-secciones" class="text-xl">0</b><span>Secciones</span></div>
-      <div class="stat flex-1"><b id="pdf-n-casillas" class="text-xl">0</b><span>Casillas</span></div>
+    <div class="flex gap-2 mb-3">
+      <div class="stat flex-1 py-1"><b id="pdf-n-secciones" class="text-lg">0</b><span>Secciones</span></div>
+      <div class="stat flex-1 py-1"><b id="pdf-n-casillas" class="text-lg">0</b><span>Casillas</span></div>
     </div>
 
-    <div id="pdf-map-container" class="w-full mb-4 hidden">
+    <!-- Contenedor del mapa amplio en el PDF -->
+    <div id="pdf-map-container" class="w-full mb-3 hidden">
       <div class="rounded border overflow-hidden">
         <img id="pdf-map-img" class="w-full h-auto block" src="" alt="Mapa de Ruta con calles">
       </div>
-      <p class="text-[10px] text-slate-500 mt-1">
-        Círculo rojo numerado = casilla · Línea azul gruesa = límite de la ruta ·
-        Línea punteada = secciones electorales con número visible · Mapa © OpenStreetMap contributors
+      <p class="text-[9px] text-slate-500 mt-0.5">
+        Círculo rojo numerado = casilla · Línea azul gruesa = límite de la ruta · Línea punteada = secciones electorales · Mapa © OpenStreetMap contributors
       </p>
     </div>
 
     <div class="overflow-x-auto">
-      <table class="w-full text-left border-collapse text-xs">
+      <table class="w-full text-left border-collapse text-[11px]">
         <thead>
-          <tr class="bg-electoral-blue text-white text-sm">
-            <th class="p-2.5 border text-center">#</th>
-            <th class="p-2.5 border">Sección</th>
-            <th class="p-2.5 border">Casilla</th>
-            <th class="p-2.5 border">Dirección del Inmueble</th>
-            <th class="p-2.5 border">Coordenadas</th>
-            <th class="p-2.5 border text-center">Google Maps</th>
+          <tr class="bg-electoral-blue text-white text-xs">
+            <th class="p-2 border text-center">#</th>
+            <th class="p-2 border">Sección</th>
+            <th class="p-2 border">Casilla</th>
+            <th class="p-2 border">Dirección del Inmueble</th>
+            <th class="p-2 border">Coordenadas</th>
+            <th class="p-2 border text-center">Google Maps</th>
           </tr>
         </thead>
         <tbody id="tabla-casillas-body" class="divide-y divide-slate-200"></tbody>
@@ -281,19 +281,9 @@
 
   const KEYS_RUTA = ['ruta', 'GEOMETRY1_', 'GEOMETRY1', 'nombre', 'id_ruta', 'layer', 'rutas'];
   const KEYS_SECCION = ['seccion', 'SECCION', 'sec', 'sección'];
-  
-  // Lista exhaustiva de nombres para la dirección del inmueble
   const KEYS_DIRECCION = [
-    'Direccion del inmueble', 
-    'Dirección del inmueble', 
-    'Direccion del Inmueble', 
-    'Dirección del Inmueble',
-    'direccion', 
-    'dirección', 
-    'Direccion', 
-    'Dirección', 
-    'ubicacion', 
-    'domicilio'
+    'Direccion del inmueble', 'Dirección del inmueble', 'Direccion del Inmueble', 'Dirección del Inmueble',
+    'direccion', 'dirección', 'Direccion', 'Dirección', 'ubicacion', 'domicilio'
   ];
 
   fetch(encodeURI('capas/Casillas_ubicacion.geojson'))
@@ -457,7 +447,6 @@
 
           if (secVal) setSecciones.add(secVal);
 
-          // Extracción exacta de la columna 'Direccion del inmueble'
           const dirRaw = getProp(props, KEYS_DIRECCION) || '';
           const dirInmueble = toTitleCase(dirRaw);
 
@@ -497,13 +486,13 @@
       const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}`;
       let tr = document.createElement('tr');
       tr.innerHTML = `
-        <td class="p-2 border text-center font-bold text-red-600">${c.n}</td>
-        <td class="p-2 border font-bold text-blue-900">${c.seccion}</td>
-        <td class="p-2 border font-semibold text-slate-800">${c.casilla}</td>
-        <td class="p-2 border text-xs">${c.dir}</td>
-        <td class="p-2 border text-[10px] font-mono">${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}</td>
-        <td class="p-2 border text-center">
-          <a href="${gmapsUrl}" target="_blank" class="bg-blue-600 text-white font-bold px-2 py-1 rounded text-[10px] hover:bg-blue-800">🧭 Abrir en Maps</a>
+        <td class="p-1.5 border text-center font-bold text-red-600">${c.n}</td>
+        <td class="p-1.5 border font-bold text-blue-900">${c.seccion}</td>
+        <td class="p-1.5 border font-semibold text-slate-800">${c.casilla}</td>
+        <td class="p-1.5 border text-[11px]">${c.dir}</td>
+        <td class="p-1.5 border text-[10px] font-mono">${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}</td>
+        <td class="p-1.5 border text-center">
+          <a href="${gmapsUrl}" target="_blank" class="bg-blue-600 text-white font-bold px-2 py-0.5 rounded text-[10px] hover:bg-blue-800">🧭 Maps</a>
         </td>`;
       tbody.appendChild(tr);
 
@@ -568,7 +557,8 @@
     const minLat = Math.min(...lats), maxLat = Math.max(...lats);
     const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
 
-    const pad = 60;
+    // Padding optimizado para que el mapa abarque con amplitud y excelente nitidez de calles
+    const pad = 40;
     let z = 18;
     for (; z > 10; z--) {
       const a = proyectar(maxLat, minLng, z), b = proyectar(minLat, maxLng, z);
@@ -667,7 +657,8 @@
     btn.disabled = true;
     txt.textContent = 'Generando mapa y PDF...';
     try {
-      const url = await construirMapaPDF(1200, 720);
+      // Mapa más amplio en alta resolución (1400x500)
+      const url = await construirMapaPDF(1400, 500);
       if (url) {
         const cargada = new Promise(r => { img.onload = r; img.onerror = r; });
         img.src = url;
@@ -677,13 +668,13 @@
         alert('No se pudo dibujar el mapa de calles. El PDF se generará solo con la tabla.');
       }
       await html2pdf().set({
-        margin: 8,
+        margin: 5,
         filename: `Reporte_${selectDistrito.value}_${selectRuta.value.replace(/\s+/g, '_')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         enableLinks: true,
-        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '#pdf-map-container'] }
+        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '#pdf-map-container', '.bg-electoral-blue'] }
       }).from(document.getElementById('pdf-area')).save();
     } finally {
       cont.classList.add('hidden');
