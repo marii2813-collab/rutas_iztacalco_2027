@@ -282,6 +282,7 @@
             <th class="p-2">Ruta</th>
             <th class="p-2">Representante General</th>
             <th class="p-2">Teléfono</th>
+            <th class="p-2">Clave de elector</th>
             <th class="p-2">Secciones</th>
             <th class="p-2 text-center">Casillas</th>
           </tr>
@@ -531,6 +532,20 @@
   }
 
   // Datos de una ruta: RG, polígonos, filas (una por celda), puntos del mapa y secciones únicas
+  // Clave de elector del RG: busca la propiedad aunque cambie el prefijo, mayúsculas o acentos
+  function buscarClaveElector(props) {
+    if (!props) return null;
+    const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[_\s]+/g, ' ').trim();
+    for (const p in props) {
+      const n = norm(p);
+      if (n.includes('clave') && n.includes('elector')) {
+        const v = props[p];
+        if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim();
+      }
+    }
+    return null;
+  }
+
   function reunirRuta(nombre) {
     const { rutasGeo, seccionesGeo, rgGeo } = cacheGeojson;
     const igual = f => {
@@ -541,7 +556,7 @@
     const featRg = (rgGeo && rgGeo.features) ? rgGeo.features.find(igual) : null;
     const propsRG = featRg ? featRg.properties : (feat ? feat.properties : null);
 
-    let rgNombre = 'Por Asignar', rgTel = '--';
+    let rgNombre = 'Por Asignar', rgTel = '--', rgClave = '--';
     if (propsRG) {
       const nom = getProp(propsRG, ['Propuesta_RG_IZTACALACO_Nombre(s)', 'nombre(s)', 'nombre', 'rg', 'representante']) || '';
       const ap1 = getProp(propsRG, ['Propuesta_RG_IZTACALACO_apellido 1', 'apellido 1', 'apellido1']) || '';
@@ -549,6 +564,7 @@
       const compuesto = `${nom} ${ap1} ${ap2}`.trim();
       if (compuesto) rgNombre = toTitleCase(compuesto);
       rgTel = getProp(propsRG, ['Propuesta_RG_IZTACALACO_Celular', 'celular', 'telefono', 'tel', 'tel_rg']) || '--';
+      rgClave = buscarClaveElector(propsRG) || '--';
     }
 
     const featSec = (seccionesGeo && seccionesGeo.features) ? seccionesGeo.features.filter(igual) : [];
@@ -575,7 +591,7 @@
     }));
 
     return {
-      nombre, feat, featSec, rgNombre, rgTel, secciones,
+      nombre, feat, featSec, rgNombre, rgTel, rgClave, secciones,
       todas: filas,                                       // una fila por celda (tabla)
       total: filas.reduce((s, c) => s + c.num, 0),        // casillas contadas (todas las de cada celda)
       casillas                                            // pines del mapa
@@ -740,6 +756,7 @@
         <td class="p-1.5 border-b border-slate-200 font-bold text-slate-800 whitespace-nowrap"><span style="display:inline-block;width:10px;height:10px;border-radius:5px;background:${r.color};margin-right:6px;"></span>${r.nombre}</td>
         <td class="p-1.5 border-b border-slate-200 font-semibold text-blue-900">${r.rgNombre}</td>
         <td class="p-1.5 border-b border-slate-200 whitespace-nowrap">${r.rgTel}</td>
+        <td class="p-1.5 border-b border-slate-200 font-mono text-[10px]">${r.rgClave}</td>
         <td class="p-1.5 border-b border-slate-200 text-[10px]">${r.secciones.join(', ') || '--'}</td>
         <td class="p-1.5 border-b border-slate-200 text-center font-bold">${r.total}</td>
       </tr>`).join('');
