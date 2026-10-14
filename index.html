@@ -477,13 +477,14 @@
     });
   }
 
-  // Todas las casillas de una ruta: cada pieza de una celda cuenta como una casilla
+  // Una fila por celda. La celda puede traer varias casillas (1950 B - 1950 C1):
+  // se mantiene agrupada, pero cada casilla suma en el conteo (num)
   function leerCasillasRuta(nombre) {
     const objetivo = String(nombre).trim().toLowerCase();
     const out = [];
     if (!casillasGlobalGeo || !casillasGlobalGeo.features) return out;
 
-    casillasGlobalGeo.features.forEach((f, idx) => {
+    casillasGlobalGeo.features.forEach(f => {
       const props = f.properties || {};
       const rC = getProp(props, ['Ruta', 'ruta', 'GEOMETRY1_']);
       if (!rC || String(rC).trim().toLowerCase() !== objetivo) return;
@@ -499,21 +500,22 @@
       const secProp = numeroSeccion(getProp(props, ['SECCION', 'seccion']));
 
       let piezas = partirCasillas(getProp(props, ['Casillas', 'casillas', 'casilla']));
-      if (piezas.length === 0) piezas = [{ seccion: '', casilla: '' }];
+      if (piezas.length === 0) piezas = [{ seccion: secProp, casilla: '' }];
+      piezas = piezas.map(p => ({ casilla: p.casilla, seccion: p.seccion || secProp || '' }));
 
-      piezas.forEach(p => {
-        out.push({
-          seccion: p.seccion || secProp || p.casilla,
-          casilla: p.casilla,
-          dir, lat, lng, conCoords,
-          grupo: idx                 // piezas de un mismo registro comparten punto en el mapa
-        });
+      const secciones = [...new Set(piezas.map(p => p.seccion).filter(Boolean))];
+      out.push({
+        texto: piezas.map(p => p.casilla).filter(Boolean).join(' - '),
+        seccion: secciones.join(' · '),
+        secciones,
+        num: piezas.length,        // casillas que trae la celda
+        dir, lat, lng, conCoords
       });
     });
     return out;
   }
 
-  // Datos de una ruta: RG, polígonos, casillas (filas), puntos del mapa y secciones únicas
+  // Datos de una ruta: RG, polígonos, filas (una por celda), puntos del mapa y secciones únicas
   function reunirRuta(nombre) {
     const { rutasGeo, seccionesGeo, rgGeo } = cacheGeojson;
     const igual = f => {
@@ -535,7 +537,7 @@
     }
 
     const featSec = (seccionesGeo && seccionesGeo.features) ? seccionesGeo.features.filter(igual) : [];
-    const todas = leerCasillasRuta(nombre);
+    const filas = leerCasillasRuta(nombre);
 
     const secs = new Set();
     featSec.forEach(f => {
@@ -543,31 +545,25 @@
       const s = numeroSeccion(sNum) || String(sNum ?? '').trim();
       if (s) secs.add(s);
     });
-    todas.forEach(c => { if (c.seccion) secs.add(c.seccion); });
+    filas.forEach(c => c.secciones.forEach(s => secs.add(s)));
     const secciones = Array.from(secs).sort((a, b) =>
       a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
-    // Un punto en el mapa por registro con coordenadas
-    const grupos = new Map();
-    todas.forEach(c => {
-      if (!c.conCoords) return;
-      if (!grupos.has(c.grupo)) grupos.set(c.grupo, []);
-      grupos.get(c.grupo).push(c);
-    });
-    const casillas = Array.from(grupos.values()).map(filas => ({
-      lat: filas[0].lat,
-      lng: filas[0].lng,
-      seccion: [...new Set(filas.map(f => f.seccion))].join(' · '),
-      casilla: filas.map(f => f.casilla).filter(Boolean).join(' · '),
-      dir: filas[0].dir,
-      filas
+    // Un pin por celda con coordenadas
+    const casillas = filas.filter(c => c.conCoords).map(c => ({
+      lat: c.lat, lng: c.lng,
+      seccion: c.seccion,
+      casilla: c.texto,
+      dir: c.dir,
+      num: c.num,
+      filas: [c]
     }));
 
     return {
       nombre, feat, featSec, rgNombre, rgTel, secciones,
-      todas,                // una fila por casilla (conteo y tabla)
-      total: todas.length,
-      casillas              // puntos del mapa
+      todas: filas,                                       // una fila por celda (tabla)
+      total: filas.reduce((s, c) => s + c.num, 0),        // casillas contadas (todas las de cada celda)
+      casillas                                            // pines del mapa
     };
   }
 
@@ -604,10 +600,10 @@
       capaSecciones.addLayer(secLayer);
     });
 
-    // Tabla: una fila por casilla (B, C1, C2, S1...), ordenada por sección
+    // Tabla: una fila por celda, ordenada por sección
     const lista = r.todas.slice().sort((x, y) =>
-      String(x.seccion).localeCompare(String(y.seccion), undefined, { numeric: true }) ||
-      String(x.casilla).localeCompare(String(y.casilla), undefined, { numeric: true }));
+      String(x.secciones[0] ?? '').localeCompare(String(y.secciones[0] ?? ''), undefined, { numeric: true }) ||
+      String(x.texto).localeCompare(String(y.texto), undefined, { numeric: true }));
 
     lista.forEach((c, i) => {
       c.n = i + 1;
@@ -616,30 +612,31 @@
       const mapsBtn = c.conCoords
         ? `<a href="${gmapsUrl}" target="_blank" class="bg-blue-600 text-white font-bold px-2 py-0.5 rounded text-[10px] hover:bg-blue-800">🧭 Maps</a>`
         : '<span class="text-slate-400 text-[10px]">—</span>';
+      const extra = c.num > 1 ? ` <span class="text-[9px] font-normal text-slate-500">· ${c.num} casillas</span>` : '';
 
       const tr = document.createElement('tr');
       tr.className = (i % 2) ? 'bg-slate-50' : '';
       tr.innerHTML = `
         <td class="p-1.5 border-b border-slate-200 text-center"><span style="display:inline-block;width:18px;height:18px;line-height:18px;border-radius:9px;background:#e11d48;color:#fff;font-weight:700;font-size:10px;text-align:center;">${c.n}</span></td>
         <td class="p-1.5 border-b border-slate-200 font-bold text-blue-900">${c.seccion}</td>
-        <td class="p-1.5 border-b border-slate-200 font-semibold text-slate-800">${c.casilla}</td>
+        <td class="p-1.5 border-b border-slate-200 font-semibold text-slate-800">${c.texto}${extra}</td>
         <td class="p-1.5 border-b border-slate-200 text-[11px]">${c.dir}</td>
         <td class="p-1.5 border-b border-slate-200 text-[10px] font-mono">${coordTxt}</td>
         <td class="p-1.5 border-b border-slate-200 text-center">${mapsBtn}</td>`;
       tbody.appendChild(tr);
     });
 
-    // Mapa: un pin por ubicación, con los números de las casillas que comparten registro
+    // Mapa: un pin por celda, numerado con el número de su fila
     r.casillas.forEach(p => {
-      p.n = p.filas.map(f => f.n).sort((a, b) => a - b).join(',');
+      p.n = p.filas[0].n;
       const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
       const icono = L.divIcon({
         className: '',
-        html: `<div class="pin-num" style="width:auto;min-width:26px;padding:0 5px;">${p.n}</div>`,
+        html: `<div class="pin-num">${p.n}</div>`,
         iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12]
       });
       const marker = L.marker([p.lat, p.lng], { icon: icono }).bindPopup(`
-        <b>#${p.n} · Sección ${p.seccion} (${p.casilla})</b><br>${p.dir}<br>
+        <b>#${p.n} · Sección ${p.seccion}</b><br>${p.casilla}${p.num > 1 ? ` (${p.num} casillas)` : ''}<br>${p.dir}<br>
         <a href="${gmapsUrl}" target="_blank" style="color:white; background:#003366; padding:3px 6px; border-radius:3px; text-decoration:none; font-size:11px; display:inline-block; margin-top:4px;">Ver en Google Maps</a>`);
       capaMarcadores.addLayer(marker);
       bounds.push([p.lat, p.lng]);
@@ -698,7 +695,7 @@
       }
       r.casillas.forEach(c => {
         const m = L.circleMarker([c.lat, c.lng], { radius: 5, color: '#fff', weight: 1.5, fillColor: r.color, fillOpacity: 1 })
-          .bindPopup(`<b>${r.nombre}</b><br>Sección ${c.seccion} (${c.casilla})<br>${c.dir}`);
+          .bindPopup(`<b>${r.nombre}</b><br>Sección ${c.seccion}<br>${c.casilla}${c.num > 1 ? ` (${c.num} casillas)` : ''}<br>${c.dir}`);
         capaMarcadores.addLayer(m);
         bounds.push([c.lat, c.lng]);
       });
