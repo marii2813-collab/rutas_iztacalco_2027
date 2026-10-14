@@ -61,6 +61,11 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
   }
 
+  .label-ruta {
+    background: rgba(255,255,255,.92); border:1px solid #334155; border-radius:4px; color:#0f172a;
+    font-weight:700; font-size:11px; padding:1px 5px; box-shadow:0 1px 3px rgba(0,0,0,.25);
+  }
+
   /* Logos del reporte: altura fija y ancho automático (sin deformarse) */
   .logo-pdf { height:60px; width:auto; display:block; }
 
@@ -117,7 +122,7 @@
       </div>
     </details>
 
-    <details class="sec" open>
+    <details class="sec" id="sec-rg" open>
       <summary>Representante General</summary>
       <div class="cuerpo text-xs space-y-3">
         <p class="font-bold text-electoral-blue text-base" id="info-ruta-nombre">Cargando...</p>
@@ -133,6 +138,14 @@
           <p class="font-semibold text-slate-500">Secciones que abarca</p>
           <p id="info-secciones" class="font-medium text-slate-800 leading-relaxed text-xs">--</p>
         </div>
+      </div>
+    </details>
+
+    <details class="sec hidden" id="sec-general" open>
+      <summary>Rutas del distrito</summary>
+      <div class="cuerpo">
+        <p class="text-[11px] text-slate-500 mb-2">Toca una ruta para ver su detalle.</p>
+        <div id="lista-rutas" class="space-y-1"></div>
       </div>
     </details>
 
@@ -189,12 +202,12 @@
         <img src="img/logo_partido.png" alt="Logo Partido" class="logo-pdf flex-none" onerror="this.src='https://via.placeholder.com/80?text=PAN'">
         <img src="img/logo%20%C3%81ngel%20Luna.jpg" alt="Logo Ángel Luna" class="logo-pdf flex-none" onerror="this.src='img/logo Ángel Luna.jpg'">
         <div class="pl-3 ml-1 border-l-2 border-slate-200">
-          <p class="text-[9px] font-bold tracking-widest text-slate-500 uppercase">Reporte operativo de ruta electoral</p>
+          <p id="pdf-caption" class="text-[9px] font-bold tracking-widest text-slate-500 uppercase">Reporte operativo de ruta electoral</p>
           <h2 id="pdf-ruta-titulo" class="text-2xl font-extrabold text-electoral-blue leading-tight">Ruta</h2>
           <p class="text-xs text-slate-600 font-bold" id="pdf-distrito-sub">Distrito Local</p>
         </div>
       </div>
-      <div class="flex-none text-left rounded-lg bg-blue-50 px-3 py-2" style="border-left:4px solid #003366; min-width:210px;">
+      <div id="pdf-rg-card" class="flex-none text-left rounded-lg bg-blue-50 px-3 py-2" style="border-left:4px solid #003366; min-width:210px;">
         <p class="text-[9px] font-bold tracking-widest text-slate-500 uppercase">Representante General</p>
         <p id="pdf-rg-nombre" class="text-sm font-bold text-blue-900 leading-tight">--</p>
         <p class="text-xs font-semibold text-slate-700 mt-0.5">Tel. <span id="pdf-rg-tel" class="text-blue-900">--</span></p>
@@ -203,6 +216,7 @@
 
     <!-- Resumen -->
     <div class="flex gap-2 mb-3 items-stretch">
+      <div id="pdf-stat-rutas" class="stat flex-1 py-1 hidden"><b id="pdf-n-rutas" class="text-lg">0</b><span>Rutas</span></div>
       <div class="stat flex-1 py-1"><b id="pdf-n-secciones" class="text-lg">0</b><span>Secciones</span></div>
       <div class="stat flex-1 py-1"><b id="pdf-n-casillas" class="text-lg">0</b><span>Casillas</span></div>
     </div>
@@ -210,11 +224,15 @@
     <!-- Mapa -->
     <div id="pdf-map-container" class="w-full mb-3 hidden">
       <div class="flex items-center justify-between mb-1">
-        <p class="text-[9px] font-bold tracking-widest text-slate-500 uppercase">Mapa de la ruta</p>
-        <div class="flex items-center gap-4 text-[9px] text-slate-600">
+        <p id="pdf-mapa-titulo" class="text-[9px] font-bold tracking-widest text-slate-500 uppercase">Mapa de la ruta</p>
+        <div id="leyenda-pdf-ruta" class="flex items-center gap-4 text-[9px] text-slate-600">
           <span class="flex items-center gap-1"><span style="display:inline-block;width:11px;height:11px;border-radius:6px;background:#e11d48;"></span>Casilla (núm. de la tabla)</span>
           <span class="flex items-center gap-1"><span style="display:inline-block;width:18px;height:3px;background:#003366;"></span>Límite de la ruta</span>
           <span class="flex items-center gap-1"><span style="display:inline-block;width:5px;height:2px;background:#4169E1;"></span><span style="display:inline-block;width:5px;height:2px;background:#4169E1;"></span><span style="display:inline-block;width:5px;height:2px;background:#4169E1;"></span>Sección electoral</span>
+        </div>
+        <div id="leyenda-pdf-general" class="hidden flex items-center gap-4 text-[9px] text-slate-600">
+          <span class="flex items-center gap-1"><span style="display:inline-block;width:18px;height:8px;background:#93c5fd;border:1.5px solid #1d4ed8;"></span>Cada color = una ruta</span>
+          <span class="flex items-center gap-1"><span style="display:inline-block;width:7px;height:7px;border-radius:4px;background:#1d4ed8;"></span>Casilla</span>
         </div>
       </div>
       <div class="rounded border border-slate-300 overflow-hidden">
@@ -223,7 +241,7 @@
     </div>
 
     <!-- Tabla -->
-    <div class="overflow-x-auto">
+    <div id="pdf-tabla-ruta" class="overflow-x-auto">
       <table class="w-full text-left border-collapse text-[11px]">
         <thead>
           <tr class="bg-electoral-blue text-white text-[10px] uppercase tracking-wide">
@@ -236,6 +254,22 @@
           </tr>
         </thead>
         <tbody id="tabla-casillas-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Tabla de la vista general -->
+    <div id="pdf-tabla-general" class="overflow-x-auto hidden">
+      <table class="w-full text-left border-collapse text-[11px]">
+        <thead>
+          <tr class="bg-electoral-blue text-white text-[10px] uppercase tracking-wide">
+            <th class="p-2">Ruta</th>
+            <th class="p-2">Representante General</th>
+            <th class="p-2">Teléfono</th>
+            <th class="p-2">Secciones</th>
+            <th class="p-2 text-center">Casillas</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-general-body"></tbody>
       </table>
     </div>
 
@@ -265,6 +299,25 @@
 
   const selectDistrito = document.getElementById('select-distrito');
   const selectRuta = document.getElementById('select-ruta');
+  const GENERAL = '__GENERAL__';
+  const PALETA = ['#1d4ed8','#dc2626','#059669','#d97706','#7c3aed','#0891b2','#db2777','#65a30d','#ea580c','#4f46e5','#0d9488','#a16207'];
+  let textoBtnPDF = 'Generar PDF de Ruta';
+
+  // Alterna entre la vista de una ruta y la vista general
+  function ajustarVista(general) {
+    document.getElementById('sec-rg').classList.toggle('hidden', general);
+    document.getElementById('sec-general').classList.toggle('hidden', !general);
+    document.getElementById('pdf-rg-card').classList.toggle('hidden', general);
+    document.getElementById('pdf-stat-rutas').classList.toggle('hidden', !general);
+    document.getElementById('pdf-tabla-ruta').classList.toggle('hidden', general);
+    document.getElementById('pdf-tabla-general').classList.toggle('hidden', !general);
+    document.getElementById('leyenda-pdf-ruta').classList.toggle('hidden', general);
+    document.getElementById('leyenda-pdf-general').classList.toggle('hidden', !general);
+    document.getElementById('pdf-mapa-titulo').textContent = general ? 'Mapa general de rutas' : 'Mapa de la ruta';
+    document.getElementById('pdf-caption').textContent = general ? 'Reporte general del distrito' : 'Reporte operativo de ruta electoral';
+    textoBtnPDF = general ? 'Generar PDF General' : 'Generar PDF de Ruta';
+    document.getElementById('btn-pdf-txt').textContent = textoBtnPDF;
+  }
 
   function toTitleCase(str) {
     if (!str) return '';
@@ -360,11 +413,19 @@
       document.getElementById('st-rutas').textContent = listaOrdenada.length;
       document.getElementById('stats').style.display = 'block';
 
-      if (selectRuta.options.length > 0) renderizarRuta(selectRuta.options[0].value, distrito);
+      if (listaOrdenada.length > 0) {
+        const optG = document.createElement('option');
+        optG.value = GENERAL; optG.textContent = 'Vista general (todas las rutas)';
+        selectRuta.insertBefore(optG, selectRuta.firstChild);
+        selectRuta.value = listaOrdenada[0];
+        renderizarRuta(listaOrdenada[0], distrito);
+      }
     });
   }
 
   function renderizarRuta(nombreRuta, distrito) {
+    if (nombreRuta === GENERAL) { renderizarGeneral(distrito); return; }
+    ajustarVista(false);
     capaRutaContorno.clearLayers();
     capaSecciones.clearLayers();
     capaMarcadores.clearLayers();
@@ -544,6 +605,134 @@
     }, 150);
   }
 
+  /* =====================================================================
+     VISTA GENERAL (todas las rutas del distrito)
+     ===================================================================== */
+  function reunirRuta(nombre) {
+    const { rutasGeo, seccionesGeo, rgGeo } = cacheGeojson;
+    const igual = f => {
+      const r = getProp(f.properties, KEYS_RUTA);
+      return r && String(r).trim().toLowerCase() === nombre.toLowerCase();
+    };
+    const feat = (rutasGeo && rutasGeo.features) ? rutasGeo.features.find(igual) : null;
+    const featRg = (rgGeo && rgGeo.features) ? rgGeo.features.find(igual) : null;
+    const propsRG = featRg ? featRg.properties : (feat ? feat.properties : null);
+
+    let rgNombre = 'Por Asignar', rgTel = '--';
+    if (propsRG) {
+      const nom = getProp(propsRG, ['Propuesta_RG_IZTACALACO_Nombre(s)', 'nombre(s)', 'nombre', 'rg', 'representante']) || '';
+      const ap1 = getProp(propsRG, ['Propuesta_RG_IZTACALACO_apellido 1', 'apellido 1', 'apellido1']) || '';
+      const ap2 = getProp(propsRG, ['Propuesta_RG_IZTACALACO_apellido 2', 'apellido 2', 'apellido2']) || '';
+      const compuesto = `${nom} ${ap1} ${ap2}`.trim();
+      if (compuesto) rgNombre = toTitleCase(compuesto);
+      rgTel = getProp(propsRG, ['Propuesta_RG_IZTACALACO_Celular', 'celular', 'telefono', 'tel', 'tel_rg']) || '--';
+    }
+
+    const secs = new Set();
+    const featSec = (seccionesGeo && seccionesGeo.features) ? seccionesGeo.features.filter(igual) : [];
+    featSec.forEach(f => {
+      const sNum = getProp(f.properties, KEYS_SECCION);
+      if (sNum) { const m = String(sNum).match(/^(\d+)/); secs.add(m ? m[1] : String(sNum).trim()); }
+    });
+
+    const casillas = [];
+    if (casillasGlobalGeo && casillasGlobalGeo.features) {
+      casillasGlobalGeo.features.forEach(f => {
+        const props = f.properties;
+        const rC = getProp(props, ['Ruta', 'ruta', 'GEOMETRY1_']);
+        if (!(rC && String(rC).trim().toLowerCase() === nombre.toLowerCase())) return;
+        let lat = parseFloat(getProp(props, ['Latitud', 'latitud', 'lat', 'Y']));
+        let lng = parseFloat(getProp(props, ['Longitud', 'longitud', 'lng', 'lon', 'X']));
+        if ((isNaN(lat) || isNaN(lng)) && f.geometry && f.geometry.coordinates) {
+          lng = f.geometry.coordinates[0]; lat = f.geometry.coordinates[1];
+        }
+        const raw = getProp(props, ['Casillas', 'casillas', 'casilla', 'SECCION', 'seccion']) || '';
+        const m = String(raw).match(/^(\d+)/);
+        const secVal = m ? m[1] : String(raw).trim();
+        if (secVal) secs.add(secVal);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          casillas.push({ lat, lng, seccion: secVal, casilla: String(raw).trim(), dir: toTitleCase(getProp(props, KEYS_DIRECCION) || '') });
+        }
+      });
+    }
+
+    const secciones = Array.from(secs).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+    return { nombre, feat, featSec, rgNombre, rgTel, casillas, secciones };
+  }
+
+  function renderizarGeneral(distrito) {
+    ajustarVista(true);
+    capaRutaContorno.clearLayers();
+    capaSecciones.clearLayers();
+    capaMarcadores.clearLayers();
+    document.getElementById('chip-ruta').textContent = 'Vista general';
+
+    const nombres = Array.from(selectRuta.options).map(o => o.value).filter(v => v !== GENERAL);
+    const rutas = nombres.map((n, i) => { const r = reunirRuta(n); r.color = PALETA[i % PALETA.length]; return r; });
+    datosRuta = { general: true, distrito, rutas, featRuta: null, featSec: [], casillas: [] };
+
+    const bounds = [];
+    rutas.forEach(r => {
+      if (r.feat) {
+        const capa = L.geoJSON(r.feat, { style: { color: r.color, weight: 3, fillColor: r.color, fillOpacity: 0.2 } });
+        capa.bindTooltip(`<span style="color:${r.color}">●</span> ${r.nombre}`, { permanent: true, direction: 'center', className: 'label-ruta' });
+        capa.on('click', () => { selectRuta.value = r.nombre; renderizarRuta(r.nombre, distrito); });
+        capaRutaContorno.addLayer(capa);
+        const b = capa.getBounds();
+        if (b.isValid()) { bounds.push(b.getSouthWest()); bounds.push(b.getNorthEast()); }
+      }
+      r.casillas.forEach(c => {
+        const m = L.circleMarker([c.lat, c.lng], { radius: 5, color: '#fff', weight: 1.5, fillColor: r.color, fillOpacity: 1 })
+          .bindPopup(`<b>${r.nombre}</b><br>Sección ${c.seccion} (${c.casilla})<br>${c.dir}`);
+        capaMarcadores.addLayer(m);
+        bounds.push([c.lat, c.lng]);
+      });
+    });
+
+    const todasSecc = new Set();
+    let totalCasillas = 0;
+    rutas.forEach(r => { r.secciones.forEach(x => todasSecc.add(x)); totalCasillas += r.casillas.length; });
+
+    // Panel lateral
+    document.getElementById('info-ruta-nombre').textContent = `Vista general (${distrito})`;
+    document.getElementById('st-secciones').textContent = todasSecc.size;
+    document.getElementById('st-casillas').textContent = totalCasillas;
+    document.getElementById('lista-rutas').innerHTML = rutas.map(r => `
+      <button type="button" data-ruta="${r.nombre}" class="w-full flex items-center gap-2 text-left text-xs p-2 rounded-lg border border-slate-200 hover:bg-slate-50">
+        <span style="display:inline-block;width:12px;height:12px;border-radius:6px;background:${r.color};flex:none"></span>
+        <span class="font-bold text-slate-800 flex-1">${r.nombre}</span>
+        <span class="text-slate-500">${r.casillas.length} casillas</span>
+      </button>`).join('');
+
+    // Reporte (PDF)
+    document.getElementById('pdf-ruta-titulo').textContent = 'Vista general';
+    document.getElementById('pdf-distrito-sub').textContent = distrito;
+    document.getElementById('pdf-n-rutas').textContent = rutas.length;
+    document.getElementById('pdf-n-secciones').textContent = todasSecc.size;
+    document.getElementById('pdf-n-casillas').textContent = totalCasillas;
+    document.getElementById('pdf-pie').textContent = `${distrito} · Vista general`;
+    document.getElementById('tabla-general-body').innerHTML = rutas.map((r, i) => `
+      <tr class="${i % 2 ? 'bg-slate-50' : ''}">
+        <td class="p-1.5 border-b border-slate-200 font-bold text-slate-800 whitespace-nowrap"><span style="display:inline-block;width:10px;height:10px;border-radius:5px;background:${r.color};margin-right:6px;"></span>${r.nombre}</td>
+        <td class="p-1.5 border-b border-slate-200 font-semibold text-blue-900">${r.rgNombre}</td>
+        <td class="p-1.5 border-b border-slate-200 whitespace-nowrap">${r.rgTel}</td>
+        <td class="p-1.5 border-b border-slate-200 text-[10px]">${r.secciones.join(', ') || '--'}</td>
+        <td class="p-1.5 border-b border-slate-200 text-center font-bold">${r.casillas.length}</td>
+      </tr>`).join('');
+
+    setTimeout(() => {
+      map.invalidateSize();
+      if (bounds.length > 0) map.fitBounds(L.latLngBounds(bounds), { padding: [40, 40] });
+    }, 150);
+  }
+
+  document.getElementById('lista-rutas').addEventListener('click', e => {
+    const b = e.target.closest('button[data-ruta]');
+    if (!b) return;
+    selectRuta.value = b.dataset.ruta;
+    renderizarRuta(b.dataset.ruta, selectDistrito.value);
+  });
+
   selectDistrito.addEventListener('change', e => cargarArchivosDistrito(e.target.value));
   selectRuta.addEventListener('change', e => renderizarRuta(e.target.value, selectDistrito.value));
   cargarArchivosDistrito('Distrito Local 15');
@@ -587,24 +776,60 @@
     return (w > 0 && h > 0) ? w * h : 0;
   }
 
-  /* W x H = tamaño del lienzo en px; k = factor de nitidez (lienzo / tamaño mostrado en el PDF) */
-  async function construirMapaPDF(W, H, k) {
-    const d = datosRuta;
-    const rutaRings = d.featRuta ? anillos(d.featRuta.geometry) : [];
-    const secRings = d.featSec.flatMap(f => anillos(f.geometry));
+  function colorConAlfa(hex, a) {
+    const n = parseInt(hex.slice(1), 16);
+    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+  }
+  function rectRedondo(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
 
-    // La ruta es la protagonista: el encuadre se calcula sobre su contorno (y sus casillas)
-    const baseRings = rutaRings.length ? rutaRings : secRings;
-    const pts = [];
-    baseRings.forEach(r => r.forEach(p => pts.push([p[1], p[0]])));
-    d.casillas.forEach(c => pts.push([c.lat, c.lng]));
-    if (!pts.length) return null;
+  // Mejor lugar libre para una etiqueta dentro de un polígono (poly = [[x,y],...] en px del lienzo)
+  function mejorLugar(poly, lw, lh, obstaculos, W, H, paso) {
+    const xs = poly.map(p => p[0]), ys = poly.map(p => p[1]);
+    const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
 
+    let A = 0, cx = 0, cy = 0;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const cr = poly[j][0] * poly[i][1] - poly[i][0] * poly[j][1];
+      A += cr; cx += (poly[j][0] + poly[i][0]) * cr; cy += (poly[j][1] + poly[i][1]) * cr;
+    }
+    A /= 2;
+    if (Math.abs(A) > 1e-6) { cx /= (6 * A); cy /= (6 * A); } else { cx = (minX + maxX) / 2; cy = (minY + maxY) / 2; }
+
+    let mejor = null;
+    for (let y = minY; y <= maxY; y += paso) {
+      for (let x = minX; x <= maxX; x += paso) {
+        if (!puntoEnPoligono(x, y, poly)) continue;
+        const r = { x1: x - lw / 2, y1: y - lh / 2, x2: x + lw / 2, y2: y + lh / 2 };
+        if (r.x1 < 2 || r.y1 < 2 || r.x2 > W - 2 || r.y2 > H - 2) continue;
+        let solape = 0;
+        obstaculos.forEach(o => { solape += areaSolape(r, o); });
+        const fuera = [[r.x1, r.y1], [r.x2, r.y1], [r.x1, r.y2], [r.x2, r.y2]]
+          .filter(([qx, qy]) => !puntoEnPoligono(qx, qy, poly)).length;
+        const puntaje = solape * 20 + fuera * 60 + Math.hypot(x - cx, y - cy);
+        if (!mejor || puntaje < mejor.puntaje) mejor = { puntaje, x, y, r };
+      }
+    }
+    if (!mejor) {
+      mejor = { x: cx, y: cy, r: { x1: cx - lw / 2, y1: cy - lh / 2, x2: cx + lw / 2, y2: cy + lh / 2 } };
+    }
+    return mejor;
+  }
+
+  /* Lienzo base: encuadre (zoom fraccional) + calles de OpenStreetMap.
+     W x H = tamaño del lienzo en px; k = factor de nitidez (lienzo / tamaño mostrado en el PDF) */
+  async function lienzoBase(pts, W, H, k) {
     const lats = pts.map(p => p[0]), lngs = pts.map(p => p[1]);
     const minLat = Math.min(...lats), maxLat = Math.max(...lats);
     const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
 
-    // Zoom fraccional: la ruta ocupa casi todo el mapa
     const pad = 20 * k;
     const a0 = proyectar(maxLat, minLng, 0), b0 = proyectar(minLat, maxLng, 0);
     const w0 = Math.abs(b0.x - a0.x), h0 = Math.abs(b0.y - a0.y);
@@ -613,8 +838,8 @@
       h0 > 0 ? Math.log2((H - 2 * pad) / h0) : 99
     );
     zf = Math.max(10, Math.min(18.5, zf));
-    const zt = Math.max(1, Math.min(19, Math.round(zf)));   // nivel de teselas a descargar
-    const ts = TILE * Math.pow(2, zf - zt);                  // tamaño de cada tesela en el lienzo
+    const zt = Math.max(1, Math.min(19, Math.round(zf)));
+    const ts = TILE * Math.pow(2, zf - zt);
 
     const c0 = proyectar((minLat + maxLat) / 2, (minLng + maxLng) / 2, zf);
     const tlx = c0.x - W / 2, tly = c0.y - H / 2;
@@ -625,7 +850,6 @@
     ctx.fillStyle = '#e5e7eb';
     ctx.fillRect(0, 0, W, H);
 
-    // Calles (OpenStreetMap)
     const n = Math.pow(2, zt);
     const jobs = [];
     for (let tx = Math.floor(tlx / ts); tx <= Math.floor((tlx + W) / ts); tx++) {
@@ -647,6 +871,72 @@
       });
     }
     function trazar(rings) { ctx.beginPath(); agregarRings(rings); }
+    return { canvas, ctx, px, agregarRings, trazar, zf, minLat, maxLat };
+  }
+
+  // Atribución, barra de escala y norte
+  function decorarMapa(ctx, W, H, k, zf, minLat, maxLat) {
+    ctx.font = `${5.8 * k}px Arial, sans-serif`;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    const atrib = '© OpenStreetMap contributors';
+    const aw = ctx.measureText(atrib).width + 8 * k;
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.fillRect(W - aw, H - 9 * k, aw, 9 * k);
+    ctx.fillStyle = '#334155';
+    ctx.fillText(atrib, W - 4 * k, H - 2 * k);
+
+    const mpp = 156543.03392 * Math.cos(((minLat + maxLat) / 2) * Math.PI / 180) / Math.pow(2, zf);
+    const objetivo = W * 0.16;
+    const opciones = [20, 25, 50, 100, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 3000, 5000];
+    let metros = opciones[0];
+    opciones.forEach(m => { if (m / mpp <= objetivo * 1.15) metros = m; });
+    const largo = metros / mpp;
+    const etiqueta = metros >= 1000 ? `${metros / 1000} km` : `${metros} m`;
+    ctx.font = `bold ${5.8 * k}px Arial, sans-serif`;
+    const caja = Math.max(largo, ctx.measureText(etiqueta).width) + 8 * k;
+    const sx = 8 * k, sy = H - 7 * k;
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.fillRect(sx - 4 * k, sy - 14 * k, caja, 18 * k);
+    ctx.strokeStyle = '#1f2937'; ctx.lineWidth = 1.4 * k;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy - 3 * k); ctx.lineTo(sx, sy); ctx.lineTo(sx + largo, sy); ctx.lineTo(sx + largo, sy - 3 * k);
+    ctx.stroke();
+    ctx.fillStyle = '#1f2937';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText(etiqueta, sx, sy - 4 * k);
+
+    const nx = W - 13 * k, ny = 13 * k;
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.beginPath(); ctx.arc(nx, ny, 9 * k, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#003366';
+    ctx.beginPath();
+    ctx.moveTo(nx, ny - 7 * k); ctx.lineTo(nx + 3.5 * k, ny + 2 * k); ctx.lineTo(nx, ny); ctx.lineTo(nx - 3.5 * k, ny + 2 * k);
+    ctx.closePath(); ctx.fill();
+    ctx.font = `bold ${5 * k}px Arial, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('N', nx, ny + 2.5 * k);
+  }
+
+  function lienzoAUrl(canvas) {
+    try { return canvas.toDataURL('image/jpeg', 0.95); } catch (e) { console.warn('Canvas bloqueado', e); return null; }
+  }
+
+  /* Mapa de UNA ruta */
+  async function construirMapaPDF(W, H, k) {
+    const d = datosRuta;
+    if (d.general) return construirMapaGeneralPDF(W, H, k);
+
+    const rutaRings = d.featRuta ? anillos(d.featRuta.geometry) : [];
+    const secRings = d.featSec.flatMap(f => anillos(f.geometry));
+
+    // La ruta es la protagonista: el encuadre se calcula sobre su contorno (y sus casillas)
+    const baseRings = rutaRings.length ? rutaRings : secRings;
+    const pts = [];
+    baseRings.forEach(r => r.forEach(p => pts.push([p[1], p[0]])));
+    d.casillas.forEach(c => pts.push([c.lat, c.lng]));
+    if (!pts.length) return null;
+
+    const { canvas, ctx, px, agregarRings, trazar, zf, minLat, maxLat } = await lienzoBase(pts, W, H, k);
 
     // Atenuar lo que está fuera de la ruta para quitar ruido
     if (rutaRings.length) {
@@ -697,41 +987,10 @@
       if (sec === null) return;
       const m = String(sec).match(/^(\d+)/);
       const txt = m ? m[1] : String(sec);
-
       const poly = rings[0].map(p => px(p[1], p[0]));
-      const xs = poly.map(p => p[0]), ys = poly.map(p => p[1]);
-      const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
-
-      // centroide del polígono
-      let A = 0, cx = 0, cy = 0;
-      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-        const cr = poly[j][0] * poly[i][1] - poly[i][0] * poly[j][1];
-        A += cr; cx += (poly[j][0] + poly[i][0]) * cr; cy += (poly[j][1] + poly[i][1]) * cr;
-      }
-      A /= 2;
-      if (Math.abs(A) > 1e-6) { cx /= (6 * A); cy /= (6 * A); } else { cx = (minX + maxX) / 2; cy = (minY + maxY) / 2; }
-
       const lw = ctx.measureText(txt).width + 3 * k;
       const lh = fs * 1.25;
-      const paso = Math.max(3, 2.2 * k);
-      let mejor = null;
-
-      for (let y = minY; y <= maxY; y += paso) {
-        for (let x = minX; x <= maxX; x += paso) {
-          if (!puntoEnPoligono(x, y, poly)) continue;
-          const r = { x1: x - lw / 2, y1: y - lh / 2, x2: x + lw / 2, y2: y + lh / 2 };
-          if (r.x1 < 2 || r.y1 < 2 || r.x2 > W - 2 || r.y2 > H - 2) continue;
-          let solape = 0;
-          obstaculos.forEach(o => { solape += areaSolape(r, o); });
-          const fuera = [[r.x1, r.y1], [r.x2, r.y1], [r.x1, r.y2], [r.x2, r.y2]]
-            .filter(([qx, qy]) => !puntoEnPoligono(qx, qy, poly)).length;
-          const puntaje = solape * 20 + fuera * 60 + Math.hypot(x - cx, y - cy);
-          if (!mejor || puntaje < mejor.puntaje) mejor = { puntaje, x, y, r };
-        }
-      }
-      if (!mejor) {
-        mejor = { x: cx, y: cy, r: { x1: cx - lw / 2, y1: cy - lh / 2, x2: cx + lw / 2, y2: cy + lh / 2 } };
-      }
+      const mejor = mejorLugar(poly, lw, lh, obstaculos, W, H, Math.max(3, 2.2 * k));
       obstaculos.push(mejor.r);
       etiquetas.push({ txt, x: mejor.x, y: mejor.y });
     });
@@ -756,50 +1015,68 @@
       ctx.fillText(String(c.n), x, y + 0.5 * k);
     });
 
-    // Atribución
-    ctx.font = `${5.8 * k}px Arial, sans-serif`;
-    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
-    const atrib = '© OpenStreetMap contributors';
-    const aw = ctx.measureText(atrib).width + 8 * k;
-    ctx.fillStyle = 'rgba(255,255,255,0.85)';
-    ctx.fillRect(W - aw, H - 9 * k, aw, 9 * k);
-    ctx.fillStyle = '#334155';
-    ctx.fillText(atrib, W - 4 * k, H - 2 * k);
+    decorarMapa(ctx, W, H, k, zf, minLat, maxLat);
+    return lienzoAUrl(canvas);
+  }
 
-    // Barra de escala (abajo-izquierda)
-    const mpp = 156543.03392 * Math.cos(((minLat + maxLat) / 2) * Math.PI / 180) / Math.pow(2, zf);
-    const objetivo = W * 0.16;
-    const opciones = [20, 25, 50, 100, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000];
-    let metros = opciones[0];
-    opciones.forEach(m => { if (m / mpp <= objetivo * 1.15) metros = m; });
-    const largo = metros / mpp;
-    const etiqueta = metros >= 1000 ? `${metros / 1000} km` : `${metros} m`;
-    ctx.font = `bold ${5.8 * k}px Arial, sans-serif`;
-    const caja = Math.max(largo, ctx.measureText(etiqueta).width) + 8 * k;
-    const sx = 8 * k, sy = H - 7 * k;
-    ctx.fillStyle = 'rgba(255,255,255,0.88)';
-    ctx.fillRect(sx - 4 * k, sy - 14 * k, caja, 18 * k);
-    ctx.strokeStyle = '#1f2937'; ctx.lineWidth = 1.4 * k;
-    ctx.beginPath();
-    ctx.moveTo(sx, sy - 3 * k); ctx.lineTo(sx, sy); ctx.lineTo(sx + largo, sy); ctx.lineTo(sx + largo, sy - 3 * k);
-    ctx.stroke();
-    ctx.fillStyle = '#1f2937';
-    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
-    ctx.fillText(etiqueta, sx, sy - 4 * k);
+  /* Mapa GENERAL: todas las rutas, cada una con su color */
+  async function construirMapaGeneralPDF(W, H, k) {
+    const d = datosRuta;
+    const pts = [];
+    d.rutas.forEach(r => {
+      if (r.feat) anillos(r.feat.geometry).forEach(ring => ring.forEach(p => pts.push([p[1], p[0]])));
+      r.casillas.forEach(c => pts.push([c.lat, c.lng]));
+    });
+    if (!pts.length) return null;
 
-    // Indicador del norte (arriba-derecha)
-    const nx = W - 13 * k, ny = 13 * k;
-    ctx.fillStyle = 'rgba(255,255,255,0.88)';
-    ctx.beginPath(); ctx.arc(nx, ny, 9 * k, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#003366';
-    ctx.beginPath();
-    ctx.moveTo(nx, ny - 7 * k); ctx.lineTo(nx + 3.5 * k, ny + 2 * k); ctx.lineTo(nx, ny); ctx.lineTo(nx - 3.5 * k, ny + 2 * k);
-    ctx.closePath(); ctx.fill();
-    ctx.font = `bold ${5 * k}px Arial, sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    ctx.fillText('N', nx, ny + 2.5 * k);
+    const { canvas, ctx, px, trazar, zf, minLat, maxLat } = await lienzoBase(pts, W, H, k);
 
-    try { return canvas.toDataURL('image/jpeg', 0.95); } catch (e) { console.warn('Canvas bloqueado', e); return null; }
+    // Polígonos de cada ruta
+    d.rutas.forEach(r => {
+      if (!r.feat) return;
+      const rings = anillos(r.feat.geometry);
+      if (!rings.length) return;
+      trazar(rings);
+      ctx.fillStyle = colorConAlfa(r.color, 0.2);
+      ctx.fill('evenodd');
+      ctx.lineWidth = 2.4 * k; ctx.strokeStyle = r.color; ctx.lineJoin = 'round';
+      ctx.stroke();
+    });
+
+    // Casillas como puntos del color de su ruta
+    const RD = 2.8 * k;
+    const obstaculos = [];
+    d.rutas.forEach(r => r.casillas.forEach(c => {
+      const [x, y] = px(c.lat, c.lng);
+      ctx.beginPath(); ctx.arc(x, y, RD, 0, Math.PI * 2);
+      ctx.fillStyle = r.color; ctx.fill();
+      ctx.lineWidth = 1 * k; ctx.strokeStyle = '#fff'; ctx.stroke();
+      obstaculos.push({ x1: x - RD - 1, y1: y - RD - 1, x2: x + RD + 1, y2: y + RD + 1 });
+    }));
+
+    // Etiqueta con el nombre de cada ruta (en el mejor lugar libre de su polígono)
+    const fs = 8 * k;
+    ctx.font = `bold ${fs}px Arial, sans-serif`;
+    d.rutas.forEach(r => {
+      if (!r.feat) return;
+      const rings = anillos(r.feat.geometry);
+      if (!rings.length) return;
+      const mayor = rings.reduce((m, x) => (x.length > m.length ? x : m), rings[0]);
+      const poly = mayor.map(p => px(p[1], p[0]));
+      const lw = ctx.measureText(r.nombre).width + 8 * k;
+      const lh = fs * 1.7;
+      const mejor = mejorLugar(poly, lw, lh, obstaculos, W, H, Math.max(3, 2.5 * k));
+      obstaculos.push(mejor.r);
+      rectRedondo(ctx, mejor.r.x1, mejor.r.y1, lw, lh, 2.5 * k);
+      ctx.fillStyle = r.color; ctx.fill();
+      ctx.lineWidth = 1 * k; ctx.strokeStyle = '#fff'; ctx.stroke();
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(r.nombre, mejor.x, mejor.y + 0.5 * k);
+    });
+
+    decorarMapa(ctx, W, H, k, zf, minLat, maxLat);
+    return lienzoAUrl(canvas);
   }
 
   /* =====================================================================
@@ -887,7 +1164,7 @@
 
       await html2pdf().set({
         margin: 5,
-        filename: `Reporte_${selectDistrito.value}_${selectRuta.value.replace(/\s+/g, '_')}.pdf`,
+        filename: `Reporte_${selectDistrito.value}_${selectRuta.value === GENERAL ? 'General' : selectRuta.value.replace(/\s+/g, '_')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 3, useCORS: true, scrollX: 0, scrollY: 0, windowWidth: ANCHO + 40 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -897,7 +1174,7 @@
     } finally {
       if (holder && holder.parentNode) holder.parentNode.removeChild(holder);
       btn.disabled = false;
-      txt.textContent = 'Generar PDF de Ruta';
+      txt.textContent = textoBtnPDF;
     }
   }
 </script>
