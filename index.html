@@ -462,13 +462,28 @@
     return m ? m[0] : '';
   }
 
-  // Todos los registros de casilla de una ruta (básicas, contiguas, especiales), tengan o no coordenadas
+  // Separa una celda en casillas: "1950 B - 1950 C1" -> ["1950 B", "1950 C1"]
+  // Si una pieza no trae número ("1950 B - C1"), toma la sección de la anterior
+  function partirCasillas(texto) {
+    const piezas = String(texto ?? '')
+      .split(/\s*[-;,\/]\s*/)
+      .map(p => p.trim())
+      .filter(p => p !== '');
+    let seccionAnterior = '';
+    return piezas.map(p => {
+      const sec = numeroSeccion(p) || seccionAnterior;
+      if (sec) seccionAnterior = sec;
+      return { seccion: sec, casilla: p };
+    });
+  }
+
+  // Todas las casillas de una ruta: cada pieza de una celda cuenta como una casilla
   function leerCasillasRuta(nombre) {
     const objetivo = String(nombre).trim().toLowerCase();
     const out = [];
     if (!casillasGlobalGeo || !casillasGlobalGeo.features) return out;
 
-    casillasGlobalGeo.features.forEach(f => {
+    casillasGlobalGeo.features.forEach((f, idx) => {
       const props = f.properties || {};
       const rC = getProp(props, ['Ruta', 'ruta', 'GEOMETRY1_']);
       if (!rC || String(rC).trim().toLowerCase() !== objetivo) return;
@@ -479,22 +494,26 @@
         lng = f.geometry.coordinates[0];
         lat = f.geometry.coordinates[1];
       }
+      const conCoords = !isNaN(lat) && !isNaN(lng);
+      const dir = toTitleCase(getProp(props, KEYS_DIRECCION) || '');
+      const secProp = numeroSeccion(getProp(props, ['SECCION', 'seccion']));
 
-      const raw = String(getProp(props, ['Casillas', 'casillas', 'casilla']) ?? '').trim();
-      const seccion = numeroSeccion(raw) || numeroSeccion(getProp(props, ['SECCION', 'seccion'])) || raw;
+      let piezas = partirCasillas(getProp(props, ['Casillas', 'casillas', 'casilla']));
+      if (piezas.length === 0) piezas = [{ seccion: '', casilla: '' }];
 
-      out.push({
-        seccion,
-        casilla: raw,
-        dir: toTitleCase(getProp(props, KEYS_DIRECCION) || ''),
-        lat, lng,
-        conCoords: !isNaN(lat) && !isNaN(lng)
+      piezas.forEach(p => {
+        out.push({
+          seccion: p.seccion || secProp || p.casilla,
+          casilla: p.casilla,
+          dir, lat, lng, conCoords,
+          grupo: idx                 // piezas de un mismo registro comparten punto en el mapa
+        });
       });
     });
     return out;
   }
 
-  // Datos de una ruta: RG, polígonos, casillas (todas y con coordenadas) y secciones únicas
+  // Datos de una ruta: RG, polígonos, casillas (filas), puntos del mapa y secciones únicas
   function reunirRuta(nombre) {
     const { rutasGeo, seccionesGeo, rgGeo } = cacheGeojson;
     const igual = f => {
@@ -528,11 +547,27 @@
     const secciones = Array.from(secs).sort((a, b) =>
       a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
+    // Un punto en el mapa por registro con coordenadas
+    const grupos = new Map();
+    todas.forEach(c => {
+      if (!c.conCoords) return;
+      if (!grupos.has(c.grupo)) grupos.set(c.grupo, []);
+      grupos.get(c.grupo).push(c);
+    });
+    const casillas = Array.from(grupos.values()).map(filas => ({
+      lat: filas[0].lat,
+      lng: filas[0].lng,
+      seccion: [...new Set(filas.map(f => f.seccion))].join(' · '),
+      casilla: filas.map(f => f.casilla).filter(Boolean).join(' · '),
+      dir: filas[0].dir,
+      filas
+    }));
+
     return {
       nombre, feat, featSec, rgNombre, rgTel, secciones,
-      todas,                                     // todas las casillas (conteo y tabla)
+      todas,                // una fila por casilla (conteo y tabla)
       total: todas.length,
-      casillas: todas.filter(c => c.conCoords)   // solo las que van en el mapa
+      casillas              // puntos del mapa
     };
   }
 
@@ -569,7 +604,7 @@
       capaSecciones.addLayer(secLayer);
     });
 
-    // Todas las casillas van a la tabla; solo las que tienen coordenadas van al mapa
+    // Tabla: una fila por casilla (B, C1, C2, S1...), ordenada por sección
     const lista = r.todas.slice().sort((x, y) =>
       String(x.seccion).localeCompare(String(y.seccion), undefined, { numeric: true }) ||
       String(x.casilla).localeCompare(String(y.casilla), undefined, { numeric: true }));
@@ -592,22 +627,29 @@
         <td class="p-1.5 border-b border-slate-200 text-[10px] font-mono">${coordTxt}</td>
         <td class="p-1.5 border-b border-slate-200 text-center">${mapsBtn}</td>`;
       tbody.appendChild(tr);
+    });
 
-      if (c.conCoords) {
-        const icono = L.divIcon({ className: '', html: `<div class="pin-num">${c.n}</div>`, iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
-        const marker = L.marker([c.lat, c.lng], { icon: icono }).bindPopup(`
-          <b>#${c.n} · Sección ${c.seccion} (${c.casilla})</b><br>${c.dir}<br>
-          <a href="${gmapsUrl}" target="_blank" style="color:white; background:#003366; padding:3px 6px; border-radius:3px; text-decoration:none; font-size:11px; display:inline-block; margin-top:4px;">Ver en Google Maps</a>`);
-        capaMarcadores.addLayer(marker);
-        bounds.push([c.lat, c.lng]);
-      }
+    // Mapa: un pin por ubicación, con los números de las casillas que comparten registro
+    r.casillas.forEach(p => {
+      p.n = p.filas.map(f => f.n).sort((a, b) => a - b).join(',');
+      const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
+      const icono = L.divIcon({
+        className: '',
+        html: `<div class="pin-num" style="width:auto;min-width:26px;padding:0 5px;">${p.n}</div>`,
+        iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12]
+      });
+      const marker = L.marker([p.lat, p.lng], { icon: icono }).bindPopup(`
+        <b>#${p.n} · Sección ${p.seccion} (${p.casilla})</b><br>${p.dir}<br>
+        <a href="${gmapsUrl}" target="_blank" style="color:white; background:#003366; padding:3px 6px; border-radius:3px; text-decoration:none; font-size:11px; display:inline-block; margin-top:4px;">Ver en Google Maps</a>`);
+      capaMarcadores.addLayer(marker);
+      bounds.push([p.lat, p.lng]);
     });
 
     datosRuta = {
       nombreRuta, distrito,
       featRuta: r.feat,
       featSec: r.featSec,
-      casillas: lista.filter(c => c.conCoords)
+      casillas: r.casillas
     };
 
     document.getElementById('info-ruta-nombre').textContent = `${nombreRuta} (${distrito})`;
