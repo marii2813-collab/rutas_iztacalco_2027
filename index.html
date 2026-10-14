@@ -456,192 +456,45 @@
     });
   }
 
-  function renderizarRuta(nombreRuta, distrito) {
-    if (nombreRuta === GENERAL) { renderizarGeneral(distrito); return; }
-    ajustarVista(false);
-    ultimaRuta = nombreRuta;
-    capaRutaContorno.clearLayers();
-    capaSecciones.clearLayers();
-    capaMarcadores.clearLayers();
-    document.getElementById('chip-ruta').textContent = nombreRuta;
-
-    const tbody = document.getElementById('tabla-casillas-body');
-    tbody.innerHTML = '';
-
-    const { rutasGeo, seccionesGeo, rgGeo } = cacheGeojson;
-    const casillasGeo = casillasGlobalGeo;
-    let bounds = [];
-    let nSecciones = 0, nCasillas = 0;
-    datosRuta = { nombreRuta, distrito, featRuta: null, featSec: [], casillas: [] };
-
-    let propsRG = null;
-
-    if (rgGeo && rgGeo.features) {
-      const featRg = rgGeo.features.find(f => {
-        const r = getProp(f.properties, KEYS_RUTA);
-        return r && String(r).trim().toLowerCase() === nombreRuta.toLowerCase();
-      });
-      if (featRg) propsRG = featRg.properties;
-    }
-
-    if (rutasGeo && rutasGeo.features) {
-      const featRuta = rutasGeo.features.find(f => {
-        const r = getProp(f.properties, KEYS_RUTA);
-        return r && String(r).trim().toLowerCase() === nombreRuta.toLowerCase();
-      });
-
-      if (featRuta) {
-        datosRuta.featRuta = featRuta;
-        if (!propsRG) propsRG = featRuta.properties;
-        capaRutaContorno.addLayer(L.geoJSON(featRuta, {
-          style: { color: '#003366', weight: 3, fillOpacity: 0.15 }
-        }));
-      }
-    }
-
-    let rgNombre = "Por Asignar";
-    let rgTel = "--";
-
-    if (propsRG) {
-      const nom = getProp(propsRG, ['Propuesta_RG_IZTACALACO_Nombre(s)', 'nombre(s)', 'nombre', 'rg', 'representante']) || '';
-      const ap1 = getProp(propsRG, ['Propuesta_RG_IZTACALACO_apellido 1', 'apellido 1', 'apellido1']) || '';
-      const ap2 = getProp(propsRG, ['Propuesta_RG_IZTACALACO_apellido 2', 'apellido 2', 'apellido2']) || '';
-      
-      let compuesto = `${nom} ${ap1} ${ap2}`.trim();
-      if (compuesto) rgNombre = toTitleCase(compuesto);
-
-      rgTel = getProp(propsRG, ['Propuesta_RG_IZTACALACO_Celular', 'celular', 'telefono', 'tel', 'tel_rg']) || "--";
-    }
-
-    let featSec = [];
-    let setSecciones = new Set();
-
-    if (seccionesGeo && seccionesGeo.features) {
-      featSec = seccionesGeo.features.filter(f => {
-        const r = getProp(f.properties, KEYS_RUTA);
-        return r && String(r).trim().toLowerCase() === nombreRuta.toLowerCase();
-      });
-      featSec.forEach(f => {
-        const sNum = getProp(f.properties, KEYS_SECCION);
-        if (sNum) {
-          let matchS = String(sNum).match(/^(\d+)/);
-          setSecciones.add(matchS ? matchS[1] : String(sNum).trim());
-        }
-        
-        const secLayer = L.geoJSON(f, {
-          style: { color: '#4169E1', weight: 1.5, dashArray: '4, 4', fillOpacity: 0.05 }
-        });
-        if (sNum) {
-          let matchS = String(sNum).match(/^(\d+)/);
-          secLayer.bindTooltip(matchS ? matchS[1] : String(sNum), {
-            permanent: true,
-            direction: 'center',
-            className: 'label-seccion'
-          });
-        }
-        capaSecciones.addLayer(secLayer);
-      });
-    }
-    datosRuta.featSec = featSec;
-
-    let lista = [];
-    if (casillasGeo && casillasGeo.features) {
-      casillasGeo.features.forEach(f => {
-        const props = f.properties;
-        const rC = getProp(props, ['Ruta', 'ruta', 'GEOMETRY1_']);
-        
-        if (rC && String(rC).trim().toLowerCase() === nombreRuta.toLowerCase()) {
-          let lat = parseFloat(getProp(props, ['Latitud', 'latitud', 'lat', 'Y']));
-          let lng = parseFloat(getProp(props, ['Longitud', 'longitud', 'lng', 'lon', 'X']));
-          
-          if ((isNaN(lat) || isNaN(lng)) && f.geometry && f.geometry.coordinates) {
-            lng = f.geometry.coordinates[0];
-            lat = f.geometry.coordinates[1];
-          }
-
-          const rawCasilla = getProp(props, ['Casillas', 'casillas', 'casilla', 'SECCION', 'seccion']) || '';
-          let matchSec = String(rawCasilla).match(/^(\d+)/);
-          let secVal = matchSec ? matchSec[1] : String(rawCasilla).trim();
-          let casillaVal = String(rawCasilla).trim();
-
-          if (secVal) setSecciones.add(secVal);
-
-          const dirRaw = getProp(props, KEYS_DIRECCION) || '';
-          const dirInmueble = toTitleCase(dirRaw);
-
-          if (!isNaN(lat) && !isNaN(lng)) {
-            lista.push({
-              lat: lat,
-              lng: lng,
-              seccion: secVal,
-              casilla: casillaVal,
-              dir: dirInmueble
-            });
-          }
-        }
-      });
-    }
-
-    const seccionesOrdenadas = Array.from(setSecciones).sort((a, b) => 
-      a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
-    );
-    const seccionesStr = seccionesOrdenadas.length > 0 ? seccionesOrdenadas.join(', ') : "--";
-
-    document.getElementById('info-ruta-nombre').textContent = `${nombreRuta} (${distrito})`;
-    document.getElementById('info-rg-nombre').textContent = rgNombre;
-    document.getElementById('info-rg-tel-link').href = `tel:${String(rgTel).replace(/\s+/g, '')}`;
-    document.getElementById('info-rg-tel').textContent = rgTel;
-    document.getElementById('info-secciones').textContent = seccionesStr;
-
-    document.getElementById('pdf-ruta-titulo').textContent = nombreRuta;
-    document.getElementById('pdf-distrito-sub').textContent = distrito;
-    document.getElementById('pdf-rg-nombre').textContent = rgNombre;
-    document.getElementById('pdf-rg-tel').textContent = rgTel;
-    document.getElementById('pdf-pie').textContent = `${distrito} · ${nombreRuta}`;
-
-    lista.sort((x, y) => String(x.seccion).localeCompare(String(y.seccion), undefined, { numeric: true }));
-
-    lista.forEach((c, i) => {
-      c.n = i + 1;
-      const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}`;
-      let tr = document.createElement('tr');
-      tr.className = (i % 2) ? 'bg-slate-50' : '';
-      tr.innerHTML = `
-        <td class="p-1.5 border-b border-slate-200 text-center"><span style="display:inline-block;width:18px;height:18px;line-height:18px;border-radius:9px;background:#e11d48;color:#fff;font-weight:700;font-size:10px;text-align:center;">${c.n}</span></td>
-        <td class="p-1.5 border-b border-slate-200 font-bold text-blue-900">${c.seccion}</td>
-        <td class="p-1.5 border-b border-slate-200 font-semibold text-slate-800">${c.casilla}</td>
-        <td class="p-1.5 border-b border-slate-200 text-[11px]">${c.dir}</td>
-        <td class="p-1.5 border-b border-slate-200 text-[10px] font-mono">${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}</td>
-        <td class="p-1.5 border-b border-slate-200 text-center">
-          <a href="${gmapsUrl}" target="_blank" class="bg-blue-600 text-white font-bold px-2 py-0.5 rounded text-[10px] hover:bg-blue-800">🧭 Maps</a>
-        </td>`;
-      tbody.appendChild(tr);
-
-      const icono = L.divIcon({ className: '', html: `<div class="pin-num">${c.n}</div>`, iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
-      const marker = L.marker([c.lat, c.lng], { icon: icono }).bindPopup(`
-        <b>#${c.n} · Sección ${c.seccion} (${c.casilla})</b><br>${c.dir}<br>
-        <a href="${gmapsUrl}" target="_blank" style="color:white; background:#003366; padding:3px 6px; border-radius:3px; text-decoration:none; font-size:11px; display:inline-block; margin-top:4px;">Ver en Google Maps</a>`);
-      capaMarcadores.addLayer(marker);
-      bounds.push([c.lat, c.lng]);
-    });
-    datosRuta.casillas = lista;
-    nCasillas = lista.length;
-    nSecciones = seccionesOrdenadas.length;
-    
-    document.getElementById('pdf-n-secciones').textContent = nSecciones;
-    document.getElementById('pdf-n-casillas').textContent = nCasillas;
-    document.getElementById('st-secciones').textContent = nSecciones;
-    document.getElementById('st-casillas').textContent = nCasillas;
-
-    setTimeout(() => {
-      map.invalidateSize();
-      if (bounds.length > 0) map.fitBounds(bounds, { padding: [40, 40] });
-    }, 150);
+  // Número de sección: primer grupo de 3 o más dígitos ("1950 C1" -> "1950")
+  function numeroSeccion(valor) {
+    const m = String(valor ?? '').match(/\d{3,}/);
+    return m ? m[0] : '';
   }
 
-  /* =====================================================================
-     VISTA GENERAL (todas las rutas del distrito)
-     ===================================================================== */
+  // Todos los registros de casilla de una ruta (básicas, contiguas, especiales), tengan o no coordenadas
+  function leerCasillasRuta(nombre) {
+    const objetivo = String(nombre).trim().toLowerCase();
+    const out = [];
+    if (!casillasGlobalGeo || !casillasGlobalGeo.features) return out;
+
+    casillasGlobalGeo.features.forEach(f => {
+      const props = f.properties || {};
+      const rC = getProp(props, ['Ruta', 'ruta', 'GEOMETRY1_']);
+      if (!rC || String(rC).trim().toLowerCase() !== objetivo) return;
+
+      let lat = parseFloat(getProp(props, ['Latitud', 'latitud', 'lat', 'Y']));
+      let lng = parseFloat(getProp(props, ['Longitud', 'longitud', 'lng', 'lon', 'X']));
+      if ((isNaN(lat) || isNaN(lng)) && f.geometry && f.geometry.coordinates) {
+        lng = f.geometry.coordinates[0];
+        lat = f.geometry.coordinates[1];
+      }
+
+      const raw = String(getProp(props, ['Casillas', 'casillas', 'casilla']) ?? '').trim();
+      const seccion = numeroSeccion(raw) || numeroSeccion(getProp(props, ['SECCION', 'seccion'])) || raw;
+
+      out.push({
+        seccion,
+        casilla: raw,
+        dir: toTitleCase(getProp(props, KEYS_DIRECCION) || ''),
+        lat, lng,
+        conCoords: !isNaN(lat) && !isNaN(lng)
+      });
+    });
+    return out;
+  }
+
+  // Datos de una ruta: RG, polígonos, casillas (todas y con coordenadas) y secciones únicas
   function reunirRuta(nombre) {
     const { rutasGeo, seccionesGeo, rgGeo } = cacheGeojson;
     const igual = f => {
@@ -662,36 +515,122 @@
       rgTel = getProp(propsRG, ['Propuesta_RG_IZTACALACO_Celular', 'celular', 'telefono', 'tel', 'tel_rg']) || '--';
     }
 
-    const secs = new Set();
     const featSec = (seccionesGeo && seccionesGeo.features) ? seccionesGeo.features.filter(igual) : [];
+    const todas = leerCasillasRuta(nombre);
+
+    const secs = new Set();
     featSec.forEach(f => {
       const sNum = getProp(f.properties, KEYS_SECCION);
-      if (sNum) { const m = String(sNum).match(/^(\d+)/); secs.add(m ? m[1] : String(sNum).trim()); }
+      const s = numeroSeccion(sNum) || String(sNum ?? '').trim();
+      if (s) secs.add(s);
     });
+    todas.forEach(c => { if (c.seccion) secs.add(c.seccion); });
+    const secciones = Array.from(secs).sort((a, b) =>
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
-    const casillas = [];
-    if (casillasGlobalGeo && casillasGlobalGeo.features) {
-      casillasGlobalGeo.features.forEach(f => {
-        const props = f.properties;
-        const rC = getProp(props, ['Ruta', 'ruta', 'GEOMETRY1_']);
-        if (!(rC && String(rC).trim().toLowerCase() === nombre.toLowerCase())) return;
-        let lat = parseFloat(getProp(props, ['Latitud', 'latitud', 'lat', 'Y']));
-        let lng = parseFloat(getProp(props, ['Longitud', 'longitud', 'lng', 'lon', 'X']));
-        if ((isNaN(lat) || isNaN(lng)) && f.geometry && f.geometry.coordinates) {
-          lng = f.geometry.coordinates[0]; lat = f.geometry.coordinates[1];
-        }
-        const raw = getProp(props, ['Casillas', 'casillas', 'casilla', 'SECCION', 'seccion']) || '';
-        const m = String(raw).match(/^(\d+)/);
-        const secVal = m ? m[1] : String(raw).trim();
-        if (secVal) secs.add(secVal);
-        if (!isNaN(lat) && !isNaN(lng)) {
-          casillas.push({ lat, lng, seccion: secVal, casilla: String(raw).trim(), dir: toTitleCase(getProp(props, KEYS_DIRECCION) || '') });
-        }
-      });
+    return {
+      nombre, feat, featSec, rgNombre, rgTel, secciones,
+      todas, // todas las casillas (conteo y tabla)
+      total: todas.length,
+      casillas: todas.filter(c => c.conCoords) // solo las que van en el mapa
+    };
+  }
+
+  function renderizarRuta(nombreRuta, distrito) {
+    if (nombreRuta === GENERAL) { renderizarGeneral(distrito); return; }
+    ajustarVista(false);
+    ultimaRuta = nombreRuta;
+    capaRutaContorno.clearLayers();
+    capaSecciones.clearLayers();
+    capaMarcadores.clearLayers();
+    document.getElementById('chip-ruta').textContent = nombreRuta;
+
+    const tbody = document.getElementById('tabla-casillas-body');
+    tbody.innerHTML = '';
+
+    const r = reunirRuta(nombreRuta);
+    const bounds = [];
+
+    if (r.feat) {
+      capaRutaContorno.addLayer(L.geoJSON(r.feat, {
+        style: { color: '#003366', weight: 3, fillOpacity: 0.15 }
+      }));
     }
 
-    const secciones = Array.from(secs).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-    return { nombre, feat, featSec, rgNombre, rgTel, casillas, secciones };
+    r.featSec.forEach(f => {
+      const sNum = getProp(f.properties, KEYS_SECCION);
+      const etiqueta = numeroSeccion(sNum) || String(sNum ?? '').trim();
+      const secLayer = L.geoJSON(f, {
+        style: { color: '#4169E1', weight: 1.5, dashArray: '4, 4', fillOpacity: 0.05 }
+      });
+      if (etiqueta) {
+        secLayer.bindTooltip(etiqueta, { permanent: true, direction: 'center', className: 'label-seccion' });
+      }
+      capaSecciones.addLayer(secLayer);
+    });
+
+    // Todas las casillas van a la tabla; solo las que tienen coordenadas van al mapa
+    const lista = r.todas.slice().sort((x, y) =>
+      String(x.seccion).localeCompare(String(y.seccion), undefined, { numeric: true }) ||
+      String(x.casilla).localeCompare(String(y.casilla), undefined, { numeric: true }));
+
+    lista.forEach((c, i) => {
+      c.n = i + 1;
+      const gmapsUrl = c.conCoords ? `https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}` : '';
+      const coordTxt = c.conCoords ? `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}` : 'Sin coordenadas';
+      const mapsBtn = c.conCoords ? 
+        `<a href="${gmapsUrl}" target="_blank" class="bg-blue-600 text-white font-bold px-2 py-0.5 rounded text-[10px] hover:bg-blue-800">🧭 Maps</a>`
+        : '<span class="text-slate-400 text-[10px]">—</span>';
+
+      const tr = document.createElement('tr');
+      tr.className = (i % 2) ? 'bg-slate-50' : '';
+      tr.innerHTML = `
+        <td class="p-1.5 border-b border-slate-200 text-center"><span style="display:inline-block;width:18px;height:18px;line-height:18px;border-radius:9px;background:#e11d48;color:#fff;font-weight:700;font-size:10px;text-align:center;">${c.n}</span></td>
+        <td class="p-1.5 border-b border-slate-200 font-bold text-blue-900">${c.seccion}</td>
+        <td class="p-1.5 border-b border-slate-200 font-semibold text-slate-800">${c.casilla}</td>
+        <td class="p-1.5 border-b border-slate-200 text-[11px]">${c.dir}</td>
+        <td class="p-1.5 border-b border-slate-200 text-[10px] font-mono">${coordTxt}</td>
+        <td class="p-1.5 border-b border-slate-200 text-center">${mapsBtn}</td>`;
+      tbody.appendChild(tr);
+
+      if (c.conCoords) {
+        const icono = L.divIcon({ className: '', html: `<div class="pin-num">${c.n}</div>`, iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
+        const marker = L.marker([c.lat, c.lng], { icon: icono }).bindPopup(`
+          <b>#${c.n} · Sección ${c.seccion} (${c.casilla})</b><br>${c.dir}<br>
+          <a href="${gmapsUrl}" target="_blank" style="color:white; background:#003366; padding:3px 6px; border-radius:3px; text-decoration:none; font-size:11px; display:inline-block; margin-top:4px;">Ver en Google Maps</a>`);
+        capaMarcadores.addLayer(marker);
+        bounds.push([c.lat, c.lng]);
+      }
+    });
+
+    datosRuta = {
+      nombreRuta, distrito,
+      featRuta: r.feat,
+      featSec: r.featSec,
+      casillas: r.casillas
+    };
+
+    document.getElementById('info-ruta-nombre').textContent = `${nombreRuta} (${distrito})`;
+    document.getElementById('info-rg-nombre').textContent = r.rgNombre;
+    document.getElementById('info-rg-tel-link').href = `tel:${String(r.rgTel).replace(/\s+/g, '')}`;
+    document.getElementById('info-rg-tel').textContent = r.rgTel;
+    document.getElementById('info-secciones').textContent = r.secciones.length ? r.secciones.join(', ') : '--';
+
+    document.getElementById('pdf-ruta-titulo').textContent = nombreRuta;
+    document.getElementById('pdf-distrito-sub').textContent = distrito;
+    document.getElementById('pdf-rg-nombre').textContent = r.rgNombre;
+    document.getElementById('pdf-rg-tel').textContent = r.rgTel;
+    document.getElementById('pdf-pie').textContent = `${distrito} · ${nombreRuta}`;
+
+    document.getElementById('pdf-n-secciones').textContent = r.secciones.length;
+    document.getElementById('pdf-n-casillas').textContent = r.total;
+    document.getElementById('st-secciones').textContent = r.secciones.length;
+    document.getElementById('st-casillas').textContent = r.total;
+
+    setTimeout(() => {
+      map.invalidateSize();
+      if (bounds.length > 0) map.fitBounds(bounds, { padding: [40, 40] });
+    }, 150);
   }
 
   function renderizarGeneral(distrito) {
@@ -725,7 +664,7 @@
 
     const todasSecc = new Set();
     let totalCasillas = 0;
-    rutas.forEach(r => { r.secciones.forEach(x => todasSecc.add(x)); totalCasillas += r.casillas.length; });
+    rutas.forEach(r => { r.secciones.forEach(x => todasSecc.add(x)); totalCasillas += r.total; });
 
     // Panel lateral
     document.getElementById('info-ruta-nombre').textContent = `Vista general (${distrito})`;
@@ -735,7 +674,7 @@
       <button type="button" data-ruta="${r.nombre}" class="w-full flex items-center gap-2 text-left text-xs p-2 rounded-lg border border-slate-200 hover:bg-slate-50">
         <span style="display:inline-block;width:12px;height:12px;border-radius:6px;background:${r.color};flex:none"></span>
         <span class="font-bold text-slate-800 flex-1">${r.nombre}</span>
-        <span class="text-slate-500">${r.casillas.length} casillas</span>
+        <span class="text-slate-500">${r.total} casillas</span>
       </button>`).join('');
 
     // Reporte (PDF)
@@ -751,7 +690,7 @@
         <td class="p-1.5 border-b border-slate-200 font-semibold text-blue-900">${r.rgNombre}</td>
         <td class="p-1.5 border-b border-slate-200 whitespace-nowrap">${r.rgTel}</td>
         <td class="p-1.5 border-b border-slate-200 text-[10px]">${r.secciones.join(', ') || '--'}</td>
-        <td class="p-1.5 border-b border-slate-200 text-center font-bold">${r.casillas.length}</td>
+        <td class="p-1.5 border-b border-slate-200 text-center font-bold">${r.total}</td>
       </tr>`).join('');
 
     setTimeout(() => {
