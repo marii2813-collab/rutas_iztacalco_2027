@@ -16,10 +16,10 @@
   .text-electoral-blue { color:var(--azul); }
   .border-electoral-blue { border-color:var(--azul); }
 
-  #app { display:flex; height:calc(100vh - 80px); min-height:520px; position:relative; overflow:hidden; }
-  #sidebar { width:350px; flex:none; background:#fff; border-right:1px solid var(--borde);
+  #app { display:flex; height:calc(100vh - 88px); min-height:520px; position:relative; overflow:hidden; }
+  #sidebar { width:360px; flex:none; background:#fff; border-right:1px solid var(--borde);
              overflow-y:auto; transition:margin-left .25s ease; z-index:500; display:flex; flex-direction:column; }
-  #sidebar.colapsado { margin-left:-350px; }
+  #sidebar.colapsado { margin-left:-360px; }
   
   #mapa-wrap { flex:1; position:relative; min-width:0; height:100%; }
   #map { position:absolute; inset:0; width:100%; height:100%; }
@@ -62,7 +62,7 @@
   }
 
   @media (max-width:768px){
-    #sidebar { position:absolute; top:0; bottom:0; left:0; width:86%; max-width:350px; box-shadow:4px 0 16px rgba(0,0,0,.2); }
+    #sidebar { position:absolute; top:0; bottom:0; left:0; width:86%; max-width:360px; box-shadow:4px 0 16px rgba(0,0,0,.2); }
     #sidebar.colapsado { margin-left:-100%; }
     #leyenda { display:none; }
   }
@@ -71,24 +71,26 @@
 <body class="flex flex-col">
 
 <!-- BARRA SUPERIOR -->
-<header class="bg-electoral-blue text-white h-20 px-6 flex items-center justify-between shadow-md border-b-2 border-blue-400 flex-none">
-  <div class="flex items-center gap-3 min-w-0">
-    <div class="bg-white rounded-lg h-14 w-14 flex items-center justify-center overflow-hidden flex-none p-1 shadow-md">
+<header class="bg-electoral-blue text-white h-22 py-2 px-6 flex items-center justify-between shadow-md border-b-2 border-blue-400 flex-none">
+  <div class="flex items-center gap-4 min-w-0">
+    <!-- Logotipo del partido -->
+    <div class="bg-white rounded-lg h-16 w-16 flex items-center justify-center overflow-hidden flex-none p-1 shadow-md">
       <img src="img/logo_partido.png" alt="Logo Partido" class="max-h-full max-w-full object-contain"
-           onerror="this.src='https://via.placeholder.com/70?text=PAN'">
+           onerror="this.src='https://via.placeholder.com/80?text=PAN'">
     </div>
-    <div class="bg-white rounded-lg h-14 w-14 flex items-center justify-center overflow-hidden flex-none p-1 shadow-md">
-      <img src="img/logo_angel_luna.png" alt="Logo Ángel Luna" class="max-h-full max-w-full object-contain"
-           onerror="this.src='https://via.placeholder.com/70?text=%Cngel+Luna'">
+    <!-- Logotipo Ángel Luna (logo Ángel Luna.jpg) -->
+    <div class="bg-white rounded-lg h-16 w-16 flex items-center justify-center overflow-hidden flex-none p-1 shadow-md">
+      <img src="img/logo%20%C3%81ngel%20Luna.jpg" alt="Logo Ángel Luna" class="max-h-full max-w-full object-contain"
+           onerror="this.src='img/logo Ángel Luna.jpg'">
     </div>
     <div class="min-w-0">
-      <h1 class="text-base md:text-lg font-bold tracking-wide truncate">Visor de Rutas Electorales</h1>
-      <p class="text-xs text-blue-200 truncate">Estructura Operativa Territorial · Representación General</p>
+      <h1 class="text-lg md:text-xl font-bold tracking-wide truncate">Visor de Rutas Electorales</h1>
+      <p class="text-xs md:text-sm text-blue-200 truncate">Estructura Operativa Territorial · Representación General</p>
     </div>
   </div>
   <div class="hidden md:flex items-center gap-2 text-xs">
-    <span class="bg-white/10 border border-white/20 rounded-full px-3 py-1 font-semibold" id="chip-distrito">Distrito Local 15</span>
-    <span class="bg-white/10 border border-white/20 rounded-full px-3 py-1 font-semibold" id="chip-ruta">--</span>
+    <span class="bg-white/10 border border-white/20 rounded-full px-3 py-1 font-semibold text-sm" id="chip-distrito">Distrito Local 15</span>
+    <span class="bg-white/10 border border-white/20 rounded-full px-3 py-1 font-semibold text-sm" id="chip-ruta">--</span>
   </div>
 </header>
 
@@ -113,7 +115,7 @@
     <details class="sec" open>
       <summary>Representante General</summary>
       <div class="cuerpo text-xs space-y-3">
-        <p class="font-bold text-electoral-blue text-sm" id="info-ruta-nombre">Cargando...</p>
+        <p class="font-bold text-electoral-blue text-base" id="info-ruta-nombre">Cargando...</p>
         <div>
           <p class="font-semibold text-slate-500">Nombre</p>
           <p id="info-rg-nombre" class="font-bold text-blue-900 text-sm">--</p>
@@ -124,7 +126,7 @@
         </div>
         <div>
           <p class="font-semibold text-slate-500">Secciones que abarca</p>
-          <p id="info-secciones" class="font-medium text-slate-800 leading-relaxed">--</p>
+          <p id="info-secciones" class="font-medium text-slate-800 leading-relaxed text-xs">--</p>
         </div>
       </div>
     </details>
@@ -176,23 +178,24 @@
 <section id="reporte" class="container mx-auto p-4 md:p-6">
   <div id="pdf-area" class="bg-white rounded-xl shadow p-6 border-t-4 border-electoral-blue">
     <div class="flex justify-between items-center border-b-2 border-blue-900 pb-4 mb-4">
-      <div class="flex items-center space-x-3">
-        <img src="img/logo_partido.png" alt="Logo Partido" class="h-16 w-16 object-contain p-1 border rounded-lg shadow-sm" onerror="this.src='https://via.placeholder.com/60?text=PAN'">
-        <img src="img/logo_angel_luna.png" alt="Logo Ángel Luna" class="h-16 w-16 object-contain p-1 border rounded-lg shadow-sm" onerror="this.src='https://via.placeholder.com/60?text=%Cngel+Luna'">
+      <div class="flex items-center space-x-4">
+        <!-- Logotipos en el PDF -->
+        <img src="img/logo_partido.png" alt="Logo Partido" class="h-20 w-20 object-contain p-1 border rounded-lg shadow-sm" onerror="this.src='https://via.placeholder.com/80?text=PAN'">
+        <img src="img/logo%20%C3%81ngel%20Luna.jpg" alt="Logo Ángel Luna" class="h-20 w-20 object-contain p-1 border rounded-lg shadow-sm" onerror="this.src='img/logo Ángel Luna.jpg'">
         <div>
-          <h3 id="pdf-ruta-titulo" class="text-xl font-bold text-electoral-blue">REPORTE OPERATIVO DE RUTA</h3>
-          <p class="text-xs text-slate-500 font-semibold mt-0.5" id="pdf-distrito-sub">Distrito Local</p>
+          <h2 id="pdf-ruta-titulo" class="text-2xl font-bold text-electoral-blue">REPORTE OPERATIVO DE RUTA</h2>
+          <p class="text-sm text-slate-600 font-bold mt-0.5" id="pdf-distrito-sub">Distrito Local</p>
         </div>
       </div>
-      <div class="text-right text-xs space-y-1">
+      <div class="text-right text-xs md:text-sm space-y-1">
         <p class="font-bold text-slate-800">RG: <span id="pdf-rg-nombre" class="text-blue-900">--</span></p>
         <p class="font-bold text-slate-800">Teléfono: <span id="pdf-rg-tel" class="text-blue-900">--</span></p>
       </div>
     </div>
 
     <div class="flex gap-3 mb-4">
-      <div class="stat flex-1"><b id="pdf-n-secciones">0</b><span>Secciones</span></div>
-      <div class="stat flex-1"><b id="pdf-n-casillas">0</b><span>Casillas</span></div>
+      <div class="stat flex-1"><b id="pdf-n-secciones" class="text-xl">0</b><span>Secciones</span></div>
+      <div class="stat flex-1"><b id="pdf-n-casillas" class="text-xl">0</b><span>Casillas</span></div>
     </div>
 
     <div id="pdf-map-container" class="w-full mb-4 hidden">
@@ -208,13 +211,13 @@
     <div class="overflow-x-auto">
       <table class="w-full text-left border-collapse text-xs">
         <thead>
-          <tr class="bg-electoral-blue text-white">
-            <th class="p-2 border text-center">#</th>
-            <th class="p-2 border">Sección</th>
-            <th class="p-2 border">Casilla</th>
-            <th class="p-2 border">Dirección del Inmueble</th>
-            <th class="p-2 border">Coordenadas</th>
-            <th class="p-2 border text-center">Google Maps</th>
+          <tr class="bg-electoral-blue text-white text-sm">
+            <th class="p-2.5 border text-center">#</th>
+            <th class="p-2.5 border">Sección</th>
+            <th class="p-2.5 border">Casilla</th>
+            <th class="p-2.5 border">Dirección del Inmueble</th>
+            <th class="p-2.5 border">Coordenadas</th>
+            <th class="p-2.5 border text-center">Google Maps</th>
           </tr>
         </thead>
         <tbody id="tabla-casillas-body" class="divide-y divide-slate-200"></tbody>
@@ -241,6 +244,13 @@
 
   const selectDistrito = document.getElementById('select-distrito');
   const selectRuta = document.getElementById('select-ruta');
+
+  function toTitleCase(str) {
+    if (!str) return '';
+    return str.toLowerCase().replace(/(?:^|\s|-|\/)\S/g, function(m) {
+      return m.toUpperCase();
+    });
+  }
 
   function togglePanel() {
     document.getElementById('sidebar').classList.toggle('colapsado');
@@ -307,365 +317,4 @@
       if (rgGeo && rgGeo.features) {
         rgGeo.features.forEach(f => {
           const r = getProp(f.properties, KEYS_RUTA);
-          if (r) rutasUnicas.add(String(r).trim());
-        });
-      }
-
-      const listaOrdenada = Array.from(rutasUnicas).sort((a, b) =>
-        a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-
-      listaOrdenada.forEach(nomRuta => {
-        let opt = document.createElement('option');
-        opt.value = nomRuta; opt.textContent = nomRuta;
-        selectRuta.appendChild(opt);
-      });
-
-      document.getElementById('st-rutas').textContent = listaOrdenada.length;
-      document.getElementById('stats').style.display = 'block';
-
-      if (selectRuta.options.length > 0) renderizarRuta(selectRuta.options[0].value, distrito);
-    });
-  }
-
-  function renderizarRuta(nombreRuta, distrito) {
-    capaRutaContorno.clearLayers();
-    capaSecciones.clearLayers();
-    capaMarcadores.clearLayers();
-    document.getElementById('chip-ruta').textContent = nombreRuta;
-
-    const tbody = document.getElementById('tabla-casillas-body');
-    tbody.innerHTML = '';
-
-    const { rutasGeo, seccionesGeo, rgGeo } = cacheGeojson;
-    const casillasGeo = casillasGlobalGeo;
-    let bounds = [];
-    let nSecciones = 0, nCasillas = 0;
-    datosRuta = { nombreRuta, distrito, featRuta: null, featSec: [], casillas: [] };
-
-    let propsRG = null;
-
-    if (rgGeo && rgGeo.features) {
-      const featRg = rgGeo.features.find(f => {
-        const r = getProp(f.properties, KEYS_RUTA);
-        return r && String(r).trim().toLowerCase() === nombreRuta.toLowerCase();
-      });
-      if (featRg) propsRG = featRg.properties;
-    }
-
-    if (rutasGeo && rutasGeo.features) {
-      const featRuta = rutasGeo.features.find(f => {
-        const r = getProp(f.properties, KEYS_RUTA);
-        return r && String(r).trim().toLowerCase() === nombreRuta.toLowerCase();
-      });
-
-      if (featRuta) {
-        datosRuta.featRuta = featRuta;
-        if (!propsRG) propsRG = featRuta.properties;
-        capaRutaContorno.addLayer(L.geoJSON(featRuta, {
-          style: { color: '#003366', weight: 3, fillOpacity: 0.15 }
-        }));
-      }
-    }
-
-    let rgNombre = "Por Asignar";
-    let rgTel = "--";
-
-    if (propsRG) {
-      const nom = getProp(propsRG, ['Propuesta_RG_IZTACALACO_Nombre(s)', 'nombre(s)', 'nombre', 'rg', 'representante']) || '';
-      const ap1 = getProp(propsRG, ['Propuesta_RG_IZTACALACO_apellido 1', 'apellido 1', 'apellido1']) || '';
-      const ap2 = getProp(propsRG, ['Propuesta_RG_IZTACALACO_apellido 2', 'apellido 2', 'apellido2']) || '';
-      
-      let compuesto = `${nom} ${ap1} ${ap2}`.trim();
-      if (compuesto) rgNombre = compuesto;
-
-      rgTel = getProp(propsRG, ['Propuesta_RG_IZTACALACO_Celular', 'celular', 'telefono', 'tel', 'tel_rg']) || "--";
-    }
-
-    let featSec = [];
-    let setSecciones = new Set();
-
-    if (seccionesGeo && seccionesGeo.features) {
-      featSec = seccionesGeo.features.filter(f => {
-        const r = getProp(f.properties, KEYS_RUTA);
-        return r && String(r).trim().toLowerCase() === nombreRuta.toLowerCase();
-      });
-      featSec.forEach(f => {
-        const sNum = getProp(f.properties, KEYS_SECCION);
-        if (sNum) {
-          let matchS = String(sNum).match(/^(\d+)/);
-          setSecciones.add(matchS ? matchS[1] : String(sNum).trim());
-        }
-        
-        const secLayer = L.geoJSON(f, {
-          style: { color: '#4169E1', weight: 1.5, dashArray: '4, 4', fillOpacity: 0.05 }
-        });
-        if (sNum) {
-          let matchS = String(sNum).match(/^(\d+)/);
-          secLayer.bindTooltip(matchS ? matchS[1] : String(sNum), {
-            permanent: true,
-            direction: 'center',
-            className: 'label-seccion'
-          });
-        }
-        capaSecciones.addLayer(secLayer);
-      });
-    }
-    datosRuta.featSec = featSec;
-
-    let lista = [];
-    if (casillasGeo && casillasGeo.features) {
-      casillasGeo.features.forEach(f => {
-        const props = f.properties;
-        const rC = getProp(props, ['Ruta', 'ruta', 'GEOMETRY1_']);
-        
-        if (rC && String(rC).trim().toLowerCase() === nombreRuta.toLowerCase()) {
-          let lat = parseFloat(getProp(props, ['Latitud', 'latitud', 'lat', 'Y']));
-          let lng = parseFloat(getProp(props, ['Longitud', 'longitud', 'lng', 'lon', 'X']));
-          
-          if ((isNaN(lat) || isNaN(lng)) && f.geometry && f.geometry.coordinates) {
-            lng = f.geometry.coordinates[0];
-            lat = f.geometry.coordinates[1];
-          }
-
-          const rawCasilla = getProp(props, ['Casillas', 'casillas', 'casilla', 'SECCION', 'seccion']) || '';
-          let matchSec = String(rawCasilla).match(/^(\d+)/);
-          let secVal = matchSec ? matchSec[1] : String(rawCasilla).trim();
-          let casillaVal = String(rawCasilla).trim();
-
-          if (secVal) setSecciones.add(secVal);
-
-          const dirInmueble = getProp(props, ['dirección', 'Dirección', 'direccion', 'Direccion', 'ubicacion', 'domicilio']) || '';
-
-          if (!isNaN(lat) && !isNaN(lng)) {
-            lista.push({
-              lat: lat,
-              lng: lng,
-              seccion: secVal,
-              casilla: casillaVal,
-              dir: dirInmueble
-            });
-          }
-        }
-      });
-    }
-
-    const seccionesOrdenadas = Array.from(setSecciones).sort((a, b) => 
-      a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
-    );
-    const seccionesStr = seccionesOrdenadas.length > 0 ? seccionesOrdenadas.join(', ') : "--";
-
-    document.getElementById('info-ruta-nombre').textContent = `${nombreRuta} (${distrito})`;
-    document.getElementById('info-rg-nombre').textContent = rgNombre;
-    document.getElementById('info-rg-tel-link').href = `tel:${String(rgTel).replace(/\s+/g, '')}`;
-    document.getElementById('info-rg-tel').textContent = rgTel;
-    document.getElementById('info-secciones').textContent = seccionesStr;
-
-    document.getElementById('pdf-ruta-titulo').textContent = `REPORTE OPERATIVO - ${nombreRuta}`;
-    document.getElementById('pdf-distrito-sub').textContent = distrito;
-    document.getElementById('pdf-rg-nombre').textContent = rgNombre;
-    document.getElementById('pdf-rg-tel').textContent = rgTel;
-
-    lista.sort((x, y) => String(x.seccion).localeCompare(String(y.seccion), undefined, { numeric: true }));
-
-    lista.forEach((c, i) => {
-      c.n = i + 1;
-      const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}`;
-      let tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="p-2 border text-center font-bold text-red-600">${c.n}</td>
-        <td class="p-2 border font-bold text-blue-900">${c.seccion}</td>
-        <td class="p-2 border font-semibold text-slate-800">${c.casilla}</td>
-        <td class="p-2 border text-xs">${c.dir}</td>
-        <td class="p-2 border text-[10px] font-mono">${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}</td>
-        <td class="p-2 border text-center">
-          <a href="${gmapsUrl}" target="_blank" class="bg-blue-600 text-white font-bold px-2 py-1 rounded text-[10px] hover:bg-blue-800">🧭 Abrir en Maps</a>
-        </td>`;
-      tbody.appendChild(tr);
-
-      const icono = L.divIcon({ className: '', html: `<div class="pin-num">${c.n}</div>`, iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -12] });
-      const marker = L.marker([c.lat, c.lng], { icon: icono }).bindPopup(`
-        <b>#${c.n} · Sección ${c.seccion} (${c.casilla})</b><br>${c.dir}<br>
-        <a href="${gmapsUrl}" target="_blank" style="color:white; background:#003366; padding:3px 6px; border-radius:3px; text-decoration:none; font-size:11px; display:inline-block; margin-top:4px;">Ver en Google Maps</a>`);
-      capaMarcadores.addLayer(marker);
-      bounds.push([c.lat, c.lng]);
-    });
-    datosRuta.casillas = lista;
-    nCasillas = lista.length;
-    nSecciones = seccionesOrdenadas.length;
-    
-    document.getElementById('pdf-n-secciones').textContent = nSecciones;
-    document.getElementById('pdf-n-casillas').textContent = nCasillas;
-    document.getElementById('st-secciones').textContent = nSecciones;
-    document.getElementById('st-casillas').textContent = nCasillas;
-
-    setTimeout(() => {
-      map.invalidateSize();
-      if (bounds.length > 0) map.fitBounds(bounds, { padding: [40, 40] });
-    }, 150);
-  }
-
-  selectDistrito.addEventListener('change', e => cargarArchivosDistrito(e.target.value));
-  selectRuta.addEventListener('change', e => renderizarRuta(e.target.value, selectDistrito.value));
-  cargarArchivosDistrito('Distrito Local 15');
-
-  const TILE = 256;
-  function proyectar(lat, lng, z) {
-    const s = TILE * Math.pow(2, z);
-    const sin = Math.sin(lat * Math.PI / 180);
-    return { x: (lng + 180) / 360 * s, y: (0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI)) * s };
-  }
-  function cargarImg(src) {
-    return new Promise(res => {
-      const im = new Image();
-      im.crossOrigin = 'anonymous';
-      im.onload = () => res(im);
-      im.onerror = () => res(null);
-      im.src = src;
-    });
-  }
-  function anillos(geom) {
-    if (!geom) return [];
-    if (geom.type === 'Polygon') return geom.coordinates;
-    if (geom.type === 'MultiPolygon') return geom.coordinates.flat();
-    return [];
-  }
-
-  async function construirMapaPDF(W, H) {
-    const d = datosRuta;
-    const rutaRings = d.featRuta ? anillos(d.featRuta.geometry) : [];
-    const secRings = d.featSec.flatMap(f => anillos(f.geometry));
-    const pts = [];
-    rutaRings.concat(secRings).forEach(r => r.forEach(p => pts.push([p[1], p[0]])));
-    d.casillas.forEach(c => pts.push([c.lat, c.lng]));
-    if (!pts.length) return null;
-
-    const lats = pts.map(p => p[0]), lngs = pts.map(p => p[1]);
-    const minLat = Math.min(...lats), maxLat = Math.max(...lats);
-    const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
-
-    const pad = 50;
-    let z = 18;
-    for (; z > 10; z--) {
-      const a = proyectar(maxLat, minLng, z), b = proyectar(minLat, maxLng, z);
-      if (Math.abs(b.x - a.x) <= W - 2 * pad && Math.abs(b.y - a.y) <= H - 2 * pad) break;
-    }
-    const c0 = proyectar((minLat + maxLat) / 2, (minLng + maxLng) / 2, z);
-    const tlx = c0.x - W / 2, tly = c0.y - H / 2;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = W; canvas.height = H;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#e5e7eb';
-    ctx.fillRect(0, 0, W, H);
-
-    const n = Math.pow(2, z);
-    const jobs = [];
-    for (let tx = Math.floor(tlx / TILE); tx <= Math.floor((tlx + W) / TILE); tx++) {
-      for (let ty = Math.floor(tly / TILE); ty <= Math.floor((tly + H) / TILE); ty++) {
-        if (ty < 0 || ty >= n) continue;
-        const wx = ((tx % n) + n) % n;
-        jobs.push(cargarImg(`https://tile.openstreetmap.org/${z}/${wx}/${ty}.png`).then(im => {
-          if (im) ctx.drawImage(im, tx * TILE - tlx, ty * TILE - tly);
-        }));
-      }
-    }
-    await Promise.all(jobs);
-
-    const px = (lat, lng) => { const p = proyectar(lat, lng, z); return [p.x - tlx, p.y - tly]; };
-    function trazar(rings) {
-      ctx.beginPath();
-      rings.forEach(r => {
-        r.forEach((p, i) => { const [x, y] = px(p[1], p[0]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
-        ctx.closePath();
-      });
-    }
-
-    d.featSec.forEach(f => {
-      const rings = anillos(f.geometry);
-      if (!rings.length) return;
-      trazar(rings);
-      ctx.fillStyle = 'rgba(65,105,225,0.06)';
-      ctx.fill('evenodd');
-      ctx.setLineDash([10, 7]); ctx.lineWidth = 2.5; ctx.strokeStyle = '#4169E1';
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      const sec = getProp(f.properties, KEYS_SECCION);
-      if (sec !== null) {
-        let matchS = String(sec).match(/^(\d+)/);
-        let secClean = matchS ? matchS[1] : String(sec);
-        const xs = rings[0].map(p => p[0]), ys = rings[0].map(p => p[1]);
-        const [cx, cy] = px((Math.min(...ys) + Math.max(...ys)) / 2, (Math.min(...xs) + Math.max(...xs)) / 2);
-        ctx.font = 'bold 20px Arial, sans-serif';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.lineWidth = 5; ctx.strokeStyle = 'rgba(255,255,255,0.95)';
-        ctx.strokeText(secClean, cx, cy);
-        ctx.fillStyle = '#1e3a8a';
-        ctx.fillText(secClean, cx, cy);
-      }
-    });
-
-    if (rutaRings.length) {
-      trazar(rutaRings);
-      ctx.fillStyle = 'rgba(0,51,102,0.08)';
-      ctx.fill('evenodd');
-      ctx.lineWidth = 5; ctx.strokeStyle = '#003366';
-      ctx.stroke();
-    }
-
-    d.casillas.forEach(c => {
-      const [x, y] = px(c.lat, c.lng);
-      ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI * 2);
-      ctx.fillStyle = '#e11d48'; ctx.fill();
-      ctx.lineWidth = 3; ctx.strokeStyle = '#fff'; ctx.stroke();
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 15px Arial, sans-serif';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(String(c.n), x, y + 1);
-    });
-
-    ctx.font = '12px Arial, sans-serif';
-    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
-    ctx.fillStyle = 'rgba(255,255,255,0.85)';
-    ctx.fillRect(W - 220, H - 20, 220, 20);
-    ctx.fillStyle = '#334155';
-    ctx.fillText('© OpenStreetMap contributors', W - 6, H - 4);
-
-    try { return canvas.toDataURL('image/png'); } catch (e) { console.warn('Canvas bloqueado', e); return null; }
-  }
-
-  async function generarPDF() {
-    const btn = document.getElementById('btn-pdf');
-    const txt = document.getElementById('btn-pdf-txt');
-    const cont = document.getElementById('pdf-map-container');
-    const img = document.getElementById('pdf-map-img');
-    btn.disabled = true;
-    txt.textContent = 'Generando mapa y PDF...';
-    try {
-      const url = await construirMapaPDF(1200, 720);
-      if (url) {
-        const cargada = new Promise(r => { img.onload = r; img.onerror = r; });
-        img.src = url;
-        await cargada;
-        cont.classList.remove('hidden');
-      } else {
-        alert('No se pudo dibujar el mapa de calles. El PDF se generará solo con la tabla.');
-      }
-      await html2pdf().set({
-        margin: 8,
-        filename: `Reporte_${selectDistrito.value}_${selectRuta.value.replace(/\s+/g, '_')}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        enableLinks: true,
-        pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '#pdf-map-container'] }
-      }).from(document.getElementById('pdf-area')).save();
-    } finally {
-      cont.classList.add('hidden');
-      btn.disabled = false;
-      txt.textContent = 'Generar PDF de Ruta';
-    }
-  }
-</script>
-</body>
-</html>
+          if (
