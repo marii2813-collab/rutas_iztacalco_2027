@@ -66,10 +66,8 @@
     font-weight:700; font-size:11px; padding:1px 5px; box-shadow:0 1px 3px rgba(0,0,0,.25);
   }
 
-  /* Logos del reporte: altura fija y ancho automático (sin deformarse) */
   .logo-pdf { height:60px; width:auto; display:block; }
 
-  /* Modo compacto del reporte cuando la ruta tiene muchas casillas (para que quepa en 1 hoja) */
   .compacto table td, .compacto table th { padding:3px 6px !important; font-size:10px !important; line-height:1.15 !important; }
   .compacto .stat { padding:3px 6px !important; }
 
@@ -194,7 +192,7 @@
   </div>
 </div>
 
-<!-- REPORTE / PLANTILLA PDF (se ajusta a 1 hoja por ruta) -->
+<!-- REPORTE / PLANTILLA PDF -->
 <section id="reporte" class="container mx-auto p-2 md:p-4">
   <div id="pdf-area" class="bg-white rounded-xl shadow p-4 border-t-4 border-electoral-blue">
 
@@ -317,7 +315,6 @@
     }
   }
 
-  // Genera el PDF general sin importar en qué ruta estés; al terminar regresa a tu ruta
   async function generarPDFGeneral() {
     const distrito = selectDistrito.value;
     const previa = selectRuta.value;
@@ -334,7 +331,6 @@
     }
   }
 
-  // Alterna entre la vista de una ruta y la vista general
   function ajustarVista(general) {
     document.getElementById('sec-rg').classList.toggle('hidden', general);
     document.getElementById('sec-general').classList.toggle('hidden', !general);
@@ -639,9 +635,6 @@
     }, 150);
   }
 
-  /* =====================================================================
-     VISTA GENERAL (todas las rutas del distrito)
-     ===================================================================== */
   function reunirRuta(nombre) {
     const { rutasGeo, seccionesGeo, rgGeo } = cacheGeojson;
     const igual = f => {
@@ -727,7 +720,6 @@
     let totalCasillas = 0;
     rutas.forEach(r => { r.secciones.forEach(x => todasSecc.add(x)); totalCasillas += r.casillas.length; });
 
-    // Panel lateral
     document.getElementById('info-ruta-nombre').textContent = `Vista general (${distrito})`;
     document.getElementById('st-secciones').textContent = todasSecc.size;
     document.getElementById('st-casillas').textContent = totalCasillas;
@@ -738,7 +730,6 @@
         <span class="text-slate-500">${r.casillas.length} casillas</span>
       </button>`).join('');
 
-    // Reporte (PDF)
     document.getElementById('pdf-ruta-titulo').textContent = 'Vista general';
     document.getElementById('pdf-distrito-sub').textContent = distrito;
     document.getElementById('pdf-n-rutas').textContent = rutas.length;
@@ -771,9 +762,6 @@
   selectRuta.addEventListener('change', e => renderizarRuta(e.target.value, selectDistrito.value));
   cargarArchivosDistrito('Distrito Local 15');
 
-  /* =====================================================================
-     MAPA DEL PDF (se dibuja aparte, ajustado a la ruta)
-     ===================================================================== */
   const TILE = 256;
   function proyectar(lat, lng, z) {
     const s = TILE * Math.pow(2, z);
@@ -795,7 +783,6 @@
     if (geom.type === 'MultiPolygon') return geom.coordinates.flat();
     return [];
   }
-  // ¿El punto (x,y) está dentro del polígono (lista de [x,y])?
   function puntoEnPoligono(x, y, ring) {
     let dentro = false;
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
@@ -824,7 +811,6 @@
     ctx.closePath();
   }
 
-  // Mejor lugar libre para una etiqueta dentro de un polígono (poly = [[x,y],...] en px del lienzo)
   function mejorLugar(poly, lw, lh, obstaculos, W, H, paso) {
     const xs = poly.map(p => p[0]), ys = poly.map(p => p[1]);
     const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
@@ -857,8 +843,6 @@
     return mejor;
   }
 
-  /* Lienzo base: encuadre (zoom fraccional) + calles de OpenStreetMap.
-     W x H = tamaño del lienzo en px; k = factor de nitidez (lienzo / tamaño mostrado en el PDF) */
   async function lienzoBase(pts, W, H, k) {
     const lats = pts.map(p => p[0]), lngs = pts.map(p => p[1]);
     const minLat = Math.min(...lats), maxLat = Math.max(...lats);
@@ -908,7 +892,6 @@
     return { canvas, ctx, px, agregarRings, trazar, zf, minLat, maxLat };
   }
 
-  // Atribución, barra de escala y norte
   function decorarMapa(ctx, W, H, k, zf, minLat, maxLat) {
     ctx.font = `${5.8 * k}px Arial, sans-serif`;
     ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
@@ -955,7 +938,6 @@
     try { return canvas.toDataURL('image/jpeg', 0.95); } catch (e) { console.warn('Canvas bloqueado', e); return null; }
   }
 
-  /* Mapa de UNA ruta */
   async function construirMapaPDF(W, H, k) {
     const d = datosRuta;
     if (d.general) return construirMapaGeneralPDF(W, H, k);
@@ -963,7 +945,6 @@
     const rutaRings = d.featRuta ? anillos(d.featRuta.geometry) : [];
     const secRings = d.featSec.flatMap(f => anillos(f.geometry));
 
-    // La ruta es la protagonista: el encuadre se calcula sobre su contorno (y sus casillas)
     const baseRings = rutaRings.length ? rutaRings : secRings;
     const pts = [];
     baseRings.forEach(r => r.forEach(p => pts.push([p[1], p[0]])));
@@ -972,7 +953,6 @@
 
     const { canvas, ctx, px, agregarRings, trazar, zf, minLat, maxLat } = await lienzoBase(pts, W, H, k);
 
-    // Atenuar lo que está fuera de la ruta para quitar ruido
     if (rutaRings.length) {
       ctx.beginPath();
       ctx.rect(0, 0, W, H);
@@ -981,7 +961,6 @@
       ctx.fill('evenodd');
     }
 
-    // Secciones (línea punteada)
     d.featSec.forEach(f => {
       const rings = anillos(f.geometry);
       if (!rings.length) return;
@@ -993,7 +972,6 @@
       ctx.setLineDash([]);
     });
 
-    // Contorno de la ruta
     if (rutaRings.length) {
       trazar(rutaRings);
       ctx.fillStyle = 'rgba(0,51,102,0.05)';
@@ -1003,14 +981,12 @@
       ctx.stroke();
     }
 
-    // Obstáculos: los círculos de casillas (las etiquetas de sección los esquivan)
     const RC = 6.5 * k;
     const obstaculos = d.casillas.map(c => {
       const [x, y] = px(c.lat, c.lng);
       return { x1: x - RC - 2, y1: y - RC - 2, x2: x + RC + 2, y2: y + RC + 2 };
     });
 
-    // Etiquetas de sección: se acomodan solas en el mejor lugar libre dentro de su polígono
     const fs = 7.5 * k;
     ctx.font = `bold ${fs}px Arial, sans-serif`;
     const etiquetas = [];
@@ -1037,7 +1013,6 @@
       ctx.fillText(e.txt, e.x, e.y);
     });
 
-    // Casillas numeradas (encima de todo)
     d.casillas.forEach(c => {
       const [x, y] = px(c.lat, c.lng);
       ctx.beginPath(); ctx.arc(x, y, RC, 0, Math.PI * 2);
@@ -1053,7 +1028,6 @@
     return lienzoAUrl(canvas);
   }
 
-  /* Mapa GENERAL: todas las rutas, cada una con su color */
   async function construirMapaGeneralPDF(W, H, k) {
     const d = datosRuta;
     const pts = [];
@@ -1065,7 +1039,6 @@
 
     const { canvas, ctx, px, trazar, zf, minLat, maxLat } = await lienzoBase(pts, W, H, k);
 
-    // Polígonos de cada ruta
     d.rutas.forEach(r => {
       if (!r.feat) return;
       const rings = anillos(r.feat.geometry);
@@ -1077,7 +1050,6 @@
       ctx.stroke();
     });
 
-    // Casillas como puntos del color de su ruta
     const RD = 2.8 * k;
     const obstaculos = [];
     d.rutas.forEach(r => r.casillas.forEach(c => {
@@ -1088,7 +1060,6 @@
       obstaculos.push({ x1: x - RD - 1, y1: y - RD - 1, x2: x + RD + 1, y2: y + RD + 1 });
     }));
 
-    // Etiqueta con el nombre de cada ruta (en el mejor lugar libre de su polígono)
     const fs = 8 * k;
     ctx.font = `bold ${fs}px Arial, sans-serif`;
     d.rutas.forEach(r => {
@@ -1113,9 +1084,6 @@
     return lienzoAUrl(canvas);
   }
 
-  /* =====================================================================
-     PDF: se arma en una copia con ancho fijo para que quepa en 1 hoja
-     ===================================================================== */
   function esperarImagenes(root) {
     return Promise.all(Array.from(root.querySelectorAll('img')).map(im =>
       (im.complete && im.naturalWidth) ? Promise.resolve()
@@ -1123,7 +1091,6 @@
     ));
   }
 
-  // Logos con proporción original (html2canvas no respeta object-fit y los deformaba)
   function ajustarLogos(root) {
     root.querySelectorAll('img.logo-pdf').forEach(im => {
       if (!im.naturalWidth || !im.naturalHeight) return;
@@ -1143,9 +1110,12 @@
     txt.textContent = 'Generando mapa y PDF...';
     let holder = null;
     try {
-      // A4 con margen de 5 mm => área útil 200 x 287 mm
-      const ANCHO = 760;
-      const ALTO_HOJA = ANCHO * (287 / 200) * 0.985;
+      const esGeneral = (selectRuta.value === GENERAL);
+      // Orientación: Horizontal (landscape) para general, Vertical (portrait) para ruta individual
+      const orientacion = esGeneral ? 'landscape' : 'portrait';
+      
+      const ANCHO = esGeneral ? 1120 : 760;
+      const ALTO_HOJA = esGeneral ? 760 : (ANCHO * (287 / 200) * 0.985);
 
       holder = document.createElement('div');
       holder.style.cssText = `position:fixed;left:-10000px;top:0;width:${ANCHO}px;`;
@@ -1166,11 +1136,10 @@
       cont.classList.remove('hidden');
       img.style.height = '0px';
 
-      // Altura disponible para el mapa = hoja completa - (encabezado + tabla)
-      const MIN_MAP = 300, MAX_MAP = 720;
+      const MIN_MAP = esGeneral ? 340 : 300, MAX_MAP = esGeneral ? 560 : 720;
       let base = doc.offsetHeight;
       let altoMapa = ALTO_HOJA - base;
-      if (altoMapa < MIN_MAP) {            // muchas casillas: tabla compacta para seguir en 1 hoja
+      if (altoMapa < MIN_MAP) {
         doc.classList.add('compacto');
         base = doc.offsetHeight;
         altoMapa = ALTO_HOJA - base;
@@ -1192,16 +1161,15 @@
         alert('No se pudo dibujar el mapa de calles. El PDF se generará solo con la tabla.');
       }
 
-      // Evita el hueco en blanco arriba / tabla cortada abajo: la captura debe hacerse sin desplazamiento de página
       window.scrollTo(0, 0);
       await new Promise(r => setTimeout(r, 150));
 
       await html2pdf().set({
         margin: 5,
-        filename: `Reporte_${selectDistrito.value}_${selectRuta.value === GENERAL ? 'General' : selectRuta.value.replace(/\s+/g, '_')}.pdf`,
+        filename: `Reporte_${selectDistrito.value}_${esGeneral ? 'General' : selectRuta.value.replace(/\s+/g, '_')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 3, useCORS: true, scrollX: 0, scrollY: 0, windowWidth: ANCHO + 40 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: orientacion },
         enableLinks: true,
         pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '#pdf-map-container'] }
       }).from(doc).save();
