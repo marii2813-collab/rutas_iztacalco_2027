@@ -530,9 +530,9 @@
 
     return {
       nombre, feat, featSec, rgNombre, rgTel, secciones,
-      todas, // todas las casillas (conteo y tabla)
+      todas,                                     // todas las casillas (conteo y tabla)
       total: todas.length,
-      casillas: todas.filter(c => c.conCoords) // solo las que van en el mapa
+      casillas: todas.filter(c => c.conCoords)   // solo las que van en el mapa
     };
   }
 
@@ -578,8 +578,8 @@
       c.n = i + 1;
       const gmapsUrl = c.conCoords ? `https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}` : '';
       const coordTxt = c.conCoords ? `${c.lat.toFixed(5)}, ${c.lng.toFixed(5)}` : 'Sin coordenadas';
-      const mapsBtn = c.conCoords ? 
-        `<a href="${gmapsUrl}" target="_blank" class="bg-blue-600 text-white font-bold px-2 py-0.5 rounded text-[10px] hover:bg-blue-800">🧭 Maps</a>`
+      const mapsBtn = c.conCoords
+        ? `<a href="${gmapsUrl}" target="_blank" class="bg-blue-600 text-white font-bold px-2 py-0.5 rounded text-[10px] hover:bg-blue-800">🧭 Maps</a>`
         : '<span class="text-slate-400 text-[10px]">—</span>';
 
       const tr = document.createElement('tr');
@@ -607,7 +607,7 @@
       nombreRuta, distrito,
       featRuta: r.feat,
       featSec: r.featSec,
-      casillas: r.casillas
+      casillas: lista.filter(c => c.conCoords)
     };
 
     document.getElementById('info-ruta-nombre').textContent = `${nombreRuta} (${distrito})`;
@@ -666,7 +666,6 @@
     let totalCasillas = 0;
     rutas.forEach(r => { r.secciones.forEach(x => todasSecc.add(x)); totalCasillas += r.total; });
 
-    // Panel lateral
     document.getElementById('info-ruta-nombre').textContent = `Vista general (${distrito})`;
     document.getElementById('st-secciones').textContent = todasSecc.size;
     document.getElementById('st-casillas').textContent = totalCasillas;
@@ -677,7 +676,6 @@
         <span class="text-slate-500">${r.total} casillas</span>
       </button>`).join('');
 
-    // Reporte (PDF)
     document.getElementById('pdf-ruta-titulo').textContent = 'Vista general';
     document.getElementById('pdf-distrito-sub').textContent = distrito;
     document.getElementById('pdf-n-rutas').textContent = rutas.length;
@@ -698,7 +696,6 @@
       if (bounds.length > 0) map.fitBounds(L.latLngBounds(bounds), { padding: [40, 40] });
     }, 150);
   }
-
   document.getElementById('lista-rutas').addEventListener('click', e => {
     const b = e.target.closest('button[data-ruta]');
     if (!b) return;
